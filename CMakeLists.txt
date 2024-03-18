@@ -9,17 +9,18 @@ add_executable(clox
         memory.h
         memory.c
         debug.h
-        debug.c)
+        debug.c
+        value.h
+        value.c)
 
 target_compile_features(clox PRIVATE c_std_11)
 set_target_properties(clox PROPERTIES
+        C_STANDARD 11
         C_EXTENSIONS OFF
         C_STANDARD_REQUIRED ON
 )
-target_compile_options(clox PRIVATE -Wall -Wextra -Werror -pedantic)
-
-
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    # Annoying in debug builds when you're just trying to get something working
-    target_compile_options(clox PRIVATE -Wno-unused-parameter -Wno-unused-variable)
-endif ()
+target_compile_options(clox PRIVATE
+        -Wall -Wextra -Werror -pedantic
+        # Annoying in debug builds when you're just trying to get something working
+        "$<$<CONFIG:DEBUG>:-Wno-unused-parameter;-Wno-unused-variable>"
+)
