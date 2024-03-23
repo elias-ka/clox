@@ -21,6 +21,6 @@ enum interpret_result {
 
 void vm_init(void);
 void vm_free(void);
-enum interpret_result vm_interpret(struct chunk *chunk);
+enum interpret_result vm_interpret(const char *source);
 
 #endif // CLOX__VM_H_

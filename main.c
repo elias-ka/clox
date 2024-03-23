@@ -1,34 +1,75 @@
-#include "chunk.h"
-#include "debug.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "common.h"
 #include "vm.h"
+
+static void repl(void)
+{
+        char line[1024];
+        for (;;) {
+                printf("> ");
+                if (!fgets(line, sizeof(line), stdin)) {
+                        printf("\n");
+                        break;
+                }
+                vm_interpret(line);
+        }
+}
+
+static char *read_file(const char *path)
+{
+        FILE *file = fopen(path, "rb");
+        if (!file) {
+                fprintf(stderr, "Could not open file \"%s\".\n", path);
+                exit(74);
+        }
+
+        fseek(file, 0L, SEEK_END);
+        const size_t file_size = ftell(file);
+        rewind(file);
+
+        char *buffer = malloc(file_size + 1);
+        if (!buffer) {
+                fprintf(stderr, "Not enough memory to read \"%s\".\n", path);
+                exit(74);
+        }
+
+        const size_t bytes_read = fread(buffer, sizeof(char), file_size, file);
+        if (bytes_read < file_size) {
+                fprintf(stderr, "Could not read file \"%s\".\n", path);
+                exit(74);
+        }
+
+        buffer[bytes_read] = '\0';
+        fclose(file);
+        return buffer;
+}
+
+static void run_file(const char *path)
+{
+        char *source = read_file(path);
+        enum interpret_result result = vm_interpret(source);
+        free(source);
+
+        if (result == INTERPRET_COMPILE_ERROR)
+                exit(65);
+        if (result == INTERPRET_RUNTIME_ERROR)
+                exit(70);
+}
 
 int main(int argc, char *argv[])
 {
         vm_init();
-        struct chunk chunk;
-        chunk_init(&chunk);
-
-        size_t constant = chunk_add_constant(&chunk, 1.2);
-        chunk_write(&chunk, OP_CONSTANT, 123);
-        chunk_write(&chunk, (uint8_t)constant, 123);
-
-        constant = chunk_add_constant(&chunk, 3.4);
-        chunk_write(&chunk, OP_CONSTANT, 123);
-        chunk_write(&chunk, (uint8_t)constant, 123);
-
-        chunk_write(&chunk, OP_ADD, 123);
-
-        constant = chunk_add_constant(&chunk, 5.6);
-        chunk_write(&chunk, OP_CONSTANT, 123);
-        chunk_write(&chunk, (uint8_t)constant, 123);
-
-        chunk_write(&chunk, OP_DIVIDE, 123);
-
-        chunk_write(&chunk, OP_NEGATE, 123);
-
-        chunk_write(&chunk, OP_RETURN, 123);
-        disassemble_chunk(&chunk, "test chunk");
-        vm_interpret(&chunk);
+        if (argc == 1) {
+                repl();
+        } else if (argc == 2) {
+                run_file(argv[1]);
+        } else {
+                fprintf(stderr, "Usage: clox [path]\n");
+                exit(64);
+        }
         vm_free();
-        chunk_free(&chunk);
+        return 0;
 }

@@ -1,7 +1,9 @@
+#include <stdio.h>
+
 #include "vm.h"
 #include "debug.h"
 #include "common.h"
-#include <stdio.h>
+#include "compiler.h"
 
 struct vm vm;
 
@@ -96,9 +98,8 @@ static enum interpret_result run(void)
 #undef BINARY_OP
 }
 
-enum interpret_result vm_interpret(struct chunk *chunk)
+enum interpret_result vm_interpret(const char *source)
 {
-        vm.chunk = chunk;
-        vm.ip = vm.chunk->code;
-        return run();
+        compile(source);
+        return INTERPRET_OK;
 }

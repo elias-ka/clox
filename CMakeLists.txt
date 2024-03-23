@@ -15,7 +15,12 @@ add_executable(clox
         value.h
         value.c
         vm.c
-        vm.h)
+        vm.h
+        compiler.c
+        compiler.h
+        scanner.h
+        scanner.c
+)
 
 target_compile_features(clox PRIVATE c_std_11)
 set_target_properties(clox PROPERTIES
@@ -24,8 +29,13 @@ set_target_properties(clox PROPERTIES
         C_STANDARD_REQUIRED ON
 )
 target_compile_options(clox PRIVATE
-        "$<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:GNU>>:-Wall;-Wextra;-Werror;-pedantic>"
-        "$<$<CONFIG:DEBUG>:-Og;-Wconversion;-Wno-sign-conversion;-Wno-unused-parameter;-Wno-unused-variable>"
+        "$<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:GNU>>:"
+        "-Wall;-Wextra;-Werror;-pedantic>"
+
+        "$<$<CONFIG:DEBUG>:"
+        "-Og;-Wconversion;-Wno-sign-conversion;"
+        "-Wno-unused-parameter;-Wno-unused-variable;-Wno-unused-function>"
 )
 target_compile_definitions(clox PRIVATE
-        "$<$<BOOL:${DEBUG_TRACE_EXECUTION}>:DEBUG_TRACE_EXECUTION>")
+        "$<$<BOOL:${DEBUG_TRACE_EXECUTION}>:DEBUG_TRACE_EXECUTION>"
+)
