@@ -6,6 +6,7 @@
 
 enum op_code {
         OP_CONSTANT,
+        OP_NEGATE,
         OP_RETURN,
 };
 

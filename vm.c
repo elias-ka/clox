@@ -57,6 +57,10 @@ static enum interpret_result run(void)
                         printf("\n");
                         break;
                 }
+                case OP_NEGATE: {
+                        vm_stack_push(-vm_stack_pop());
+                        break;
+                }
                 case OP_RETURN: {
                         value_print(vm_stack_pop());
                         printf("\n");
