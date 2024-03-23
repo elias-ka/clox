@@ -6,8 +6,8 @@ add_executable(clox
         common.h
         chunk.h
         chunk.c
-        memory.h
-        memory.c
+        memutil.h
+        memutil.c
         debug.h
         debug.c
         value.h
@@ -20,7 +20,6 @@ set_target_properties(clox PROPERTIES
         C_STANDARD_REQUIRED ON
 )
 target_compile_options(clox PRIVATE
-        -Wall -Wextra -Werror -pedantic
-        # Annoying in debug builds when you're just trying to get something working
-        "$<$<CONFIG:DEBUG>:-Wno-unused-parameter;-Wno-unused-variable>"
+        "$<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:GNU>>:-Wall;-Wextra;-Werror;-pedantic>"
+        "$<$<CONFIG:DEBUG>:-Og;-Wconversion;-Wno-sign-conversion;-Wno-unused-parameter;-Wno-unused-variable>"
 )

@@ -5,4 +5,4 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#endif //CLOX__COMMON_H_
+#endif // CLOX__COMMON_H_
