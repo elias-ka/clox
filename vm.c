@@ -35,6 +35,13 @@ static enum interpret_result run(void)
 {
 #define READ_BYTE() (*vm.ip++)
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+#define BINARY_OP(op)                           \
+        do {                                    \
+                const value b = vm_stack_pop(); \
+                const value a = vm_stack_pop(); \
+                vm_stack_push(a op b);          \
+        } while (false)
+
         for (;;) {
 #ifdef DEBUG_TRACE_EXECUTION
                 printf("          ");
@@ -57,6 +64,22 @@ static enum interpret_result run(void)
                         printf("\n");
                         break;
                 }
+                case OP_ADD: {
+                        BINARY_OP(+);
+                        break;
+                }
+                case OP_SUBTRACT: {
+                        BINARY_OP(-);
+                        break;
+                }
+                case OP_MULTIPLY: {
+                        BINARY_OP(*);
+                        break;
+                }
+                case OP_DIVIDE: {
+                        BINARY_OP(/);
+                        break;
+                }
                 case OP_NEGATE: {
                         vm_stack_push(-vm_stack_pop());
                         break;
@@ -70,6 +93,7 @@ static enum interpret_result run(void)
         }
 #undef READ_BYTE
 #undef READ_CONSTANT
+#undef BINARY_OP
 }
 
 enum interpret_result vm_interpret(struct chunk *chunk)
