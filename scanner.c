@@ -116,8 +116,11 @@ static void skip_whitespace(void)
 static enum token_type check_keyword(int start, int length, const char *rest,
                                      enum token_type type)
 {
-        if (scanner.current - scanner.start == start + length &&
-            memcmp(scanner.start + start, rest, length) == 0) {
+        const bool is_keyword =
+                scanner.current - scanner.start == start + length &&
+                memcmp(scanner.start + start, rest, length) == 0;
+
+        if (is_keyword) {
                 return type;
         }
 

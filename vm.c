@@ -100,6 +100,17 @@ static enum interpret_result run(void)
 
 enum interpret_result vm_interpret(const char *source)
 {
-        compile(source);
-        return INTERPRET_OK;
+        struct chunk chunk;
+        chunk_init(&chunk);
+
+        if (!compile(source, &chunk)) {
+                chunk_free(&chunk);
+                return INTERPRET_COMPILE_ERROR;
+        }
+
+        vm.chunk = &chunk;
+        vm.ip = vm.chunk->code;
+        const enum interpret_result result = run();
+        chunk_free(&chunk);
+        return result;
 }
