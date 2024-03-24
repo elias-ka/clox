@@ -36,7 +36,7 @@ void chunk_free(struct chunk *chunk)
         chunk_init(chunk);
 }
 
-size_t chunk_add_constant(struct chunk *chunk, value v)
+size_t chunk_add_constant(struct chunk *chunk, struct value v)
 {
         value_array_write(&chunk->constants, v);
         return chunk->constants.count - 1;

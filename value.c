@@ -11,13 +11,13 @@ void value_array_init(struct value_array *array)
         array->values = NULL;
 }
 
-void value_array_write(struct value_array *array, value v)
+void value_array_write(struct value_array *array, struct value v)
 {
         if (array->capacity < array->count + 1) {
                 const int old_capacity = array->capacity;
                 array->capacity = GROW_CAPACITY(old_capacity);
-                array->values = GROW_ARRAY(value, array->values, old_capacity,
-                                           array->capacity);
+                array->values = GROW_ARRAY(struct value, array->values,
+                                           old_capacity, array->capacity);
         }
         array->values[array->count] = v;
         array->count++;
@@ -25,11 +25,39 @@ void value_array_write(struct value_array *array, value v)
 
 void value_array_free(struct value_array *array)
 {
-        FREE_ARRAY(value, array->values, array->capacity);
+        FREE_ARRAY(struct value, array->values, array->capacity);
         value_array_init(array);
 }
 
-void value_print(value v)
+void value_print(struct value v)
 {
-        printf("%g", v);
+        switch (v.type) {
+        case VAL_BOOL:
+                printf(AS_BOOL(v) ? "true" : "false");
+                break;
+        case VAL_NIL:
+                printf("nil");
+                break;
+        case VAL_NUMBER:
+                printf("%g", AS_NUMBER(v));
+                break;
+        }
+}
+
+bool values_equal(struct value a, struct value b)
+{
+        if (a.type != b.type) {
+                return false;
+        }
+
+        switch (a.type) {
+        case VAL_BOOL:
+                return AS_BOOL(a) == AS_BOOL(b);
+        case VAL_NIL:
+                return true;
+        case VAL_NUMBER:
+                return AS_NUMBER(a) == AS_NUMBER(b);
+        default:
+                return false;
+        }
 }

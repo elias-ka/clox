@@ -9,8 +9,8 @@
 struct vm {
         struct chunk *chunk;
         uint8_t *ip;
-        value stack[STACK_MAX];
-        value *stack_top;
+        struct value stack[STACK_MAX];
+        struct value *stack_top;
 };
 
 enum interpret_result {
