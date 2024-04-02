@@ -11,6 +11,7 @@ struct vm {
         uint8_t *ip;
         struct value stack[STACK_MAX];
         struct value *stack_top;
+        struct obj *objects;
 };
 
 enum interpret_result {
@@ -18,6 +19,8 @@ enum interpret_result {
         INTERPRET_COMPILE_ERROR,
         INTERPRET_RUNTIME_ERROR,
 };
+
+extern struct vm vm;
 
 void vm_init(void);
 void vm_free(void);

@@ -21,12 +21,13 @@ void scanner_init(const char *source)
 
 static bool is_alpha(char c)
 {
-        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+        return ((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z')) ||
+               (c == '_');
 }
 
 static bool is_digit(char c)
 {
-        return c >= '0' && c <= '9';
+        return (c >= '0') && (c <= '9');
 }
 
 static bool is_at_end(void)
@@ -101,7 +102,7 @@ static void skip_whitespace(void)
                         break;
                 case '/':
                         if (peek_next() == '/') {
-                                while (peek() != '\n' && !is_at_end())
+                                while ((peek() != '\n') && (!is_at_end()))
                                         advance();
                         } else {
                                 return;
@@ -117,8 +118,8 @@ static enum token_type check_keyword(int start, int length, const char *rest,
                                      enum token_type type)
 {
         const bool is_keyword =
-                scanner.current - scanner.start == start + length &&
-                memcmp(scanner.start + start, rest, length) == 0;
+                ((scanner.current - scanner.start) == (start + length)) &&
+                (memcmp(scanner.start + start, rest, length) == 0);
 
         if (is_keyword) {
                 return type;
@@ -137,7 +138,7 @@ static enum token_type identifier_type(void)
         case 'e':
                 return check_keyword(1, 3, "lse", TOKEN_ELSE);
         case 'f':
-                if (scanner.current - scanner.start > 1) {
+                if ((scanner.current - scanner.start) > 1) {
                         switch (scanner.start[1]) {
                         case 'a':
                                 return check_keyword(2, 3, "lse", TOKEN_FALSE);
@@ -161,7 +162,7 @@ static enum token_type identifier_type(void)
         case 's':
                 return check_keyword(1, 4, "uper", TOKEN_SUPER);
         case 't':
-                if (scanner.current - scanner.start > 1) {
+                if ((scanner.current - scanner.start) > 1) {
                         switch (scanner.start[1]) {
                         case 'h':
                                 return check_keyword(2, 2, "is", TOKEN_THIS);
@@ -192,7 +193,7 @@ static struct token number(void)
                 advance();
 
         // Look for a fractional part
-        if (peek() == '.' && is_digit(peek_next())) {
+        if ((peek() == '.') && is_digit(peek_next())) {
                 // Consume the "."
                 advance();
 
@@ -205,7 +206,7 @@ static struct token number(void)
 
 static struct token string(void)
 {
-        while (peek() != '"' && !is_at_end()) {
+        while ((peek() != '"') && (!is_at_end())) {
                 if (peek() == '\n')
                         scanner.line++;
 

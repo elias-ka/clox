@@ -1,12 +1,15 @@
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include "vm.h"
 #include "debug.h"
 #include "common.h"
 #include "compiler.h"
+#include "object.h"
+#include "memutil.h"
 
-static struct vm vm;
+struct vm vm;
 
 static void reset_stack(void)
 {
@@ -30,10 +33,12 @@ static void runtime_error(const char *format, ...)
 void vm_init(void)
 {
         reset_stack();
+        vm.objects = NULL;
 }
 
 void vm_free(void)
 {
+        free_objects();
 }
 
 void push(struct value v)
@@ -55,7 +60,22 @@ static struct value peek(int distance)
 
 static bool is_falsey(struct value v)
 {
-        return IS_NIL(v) || (IS_BOOL(v) && !AS_BOOL(v));
+        return IS_NIL(v) || (IS_BOOL(v) && (!AS_BOOL(v)));
+}
+
+static void concatenate(void)
+{
+        const struct obj_string *b = AS_STRING(pop());
+        const struct obj_string *a = AS_STRING(pop());
+
+        const int length = a->length + b->length;
+        char *chars = ALLOCATE(char, length + 1);
+        memcpy(chars, a->chars, a->length);
+        memcpy(chars + a->length, b->chars, b->length);
+        chars[length] = '\0';
+
+        struct obj_string *result = take_string(chars, length);
+        push(OBJ_VAL(result));
 }
 
 static enum interpret_result run(void)
@@ -122,7 +142,17 @@ static enum interpret_result run(void)
                         break;
                 }
                 case OP_ADD: {
-                        BINARY_OP(NUMBER_VAL, +);
+                        if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
+                                concatenate();
+                        } else if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
+                                double b = AS_NUMBER(pop());
+                                double a = AS_NUMBER(pop());
+                                push(NUMBER_VAL(a + b));
+                        } else {
+                                runtime_error(
+                                        "Operands must be two numbers or two strings.");
+                                return INTERPRET_RUNTIME_ERROR;
+                        }
                         break;
                 }
                 case OP_SUBTRACT: {

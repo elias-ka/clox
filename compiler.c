@@ -3,18 +3,22 @@
 
 #include "common.h"
 #include "compiler.h"
+#include "object.h"
+#include "value.h"
 #include "scanner.h"
 
 #ifdef DEBUG_PRINT_CODE
 #include "debug.h"
 #endif
 
-static struct parser {
+struct parser {
         struct token current;
         struct token previous;
         bool had_error;
         bool panic_mode;
-} parser;
+};
+
+static struct parser parser;
 
 enum precedence {
         PREC_NONE,
@@ -45,7 +49,7 @@ static struct chunk *current_chunk(void)
         return compiling_chunk;
 }
 
-static void error_at(struct token *tok, const char *message)
+static void error_at(const struct token *tok, const char *message)
 {
         if (parser.panic_mode)
                 return;
@@ -215,6 +219,12 @@ static void number(void)
         emit_constant(NUMBER_VAL(value));
 }
 
+static void string(void)
+{
+        emit_constant(OBJ_VAL(copy_string(parser.previous.start + 1,
+                                          parser.previous.length - 2)));
+}
+
 static void unary(void)
 {
         const enum token_type operator_type = parser.previous.type;
@@ -233,7 +243,7 @@ static void unary(void)
         }
 }
 
-struct parse_rule rules[] = {
+struct parse_rule rules[40] = {
         [TOKEN_LEFT_PAREN] = { grouping, NULL, PREC_NONE },
         [TOKEN_RIGHT_PAREN] = { NULL, NULL, PREC_NONE },
         [TOKEN_LEFT_BRACE] = { NULL, NULL, PREC_NONE },
@@ -254,7 +264,7 @@ struct parse_rule rules[] = {
         [TOKEN_LESS] = { NULL, binary, PREC_COMPARISON },
         [TOKEN_LESS_EQUAL] = { NULL, binary, PREC_COMPARISON },
         [TOKEN_IDENTIFIER] = { NULL, NULL, PREC_NONE },
-        [TOKEN_STRING] = { NULL, NULL, PREC_NONE },
+        [TOKEN_STRING] = { string, NULL, PREC_NONE },
         [TOKEN_NUMBER] = { number, NULL, PREC_NONE },
         [TOKEN_AND] = { NULL, NULL, PREC_NONE },
         [TOKEN_CLASS] = { NULL, NULL, PREC_NONE },

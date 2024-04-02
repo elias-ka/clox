@@ -3,7 +3,7 @@
 
 #include "chunk.h"
 
-void disassemble_chunk(struct chunk *chunk, const char *name);
-int disassemble_instruction(struct chunk *chunk, int offset);
+void disassemble_chunk(const struct chunk *chunk, const char *name);
+int disassemble_instruction(const struct chunk *chunk, int offset);
 
 #endif // CLOX__DEBUG_H_

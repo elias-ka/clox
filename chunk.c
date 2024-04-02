@@ -15,7 +15,7 @@ void chunk_init(struct chunk *chunk)
 
 void chunk_write(struct chunk *chunk, uint8_t byte, int line)
 {
-        if (chunk->capacity < chunk->size + 1) {
+        if (chunk->capacity < (chunk->size + 1)) {
                 const int old_capacity = chunk->capacity;
                 chunk->capacity = GROW_CAPACITY(old_capacity);
                 chunk->code = GROW_ARRAY(uint8_t, chunk->code, old_capacity,

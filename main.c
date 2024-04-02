@@ -30,19 +30,28 @@ static char *read_file(const char *path)
         const size_t file_size = ftell(file);
         rewind(file);
 
+        if (file_size <= 0) {
+                fprintf(stderr, "File \"%s\" is empty.\n", path);
+                fclose(file);
+                exit(74);
+        }
+
         char *buffer = malloc(file_size + 1);
         if (!buffer) {
                 fprintf(stderr, "Not enough memory to read \"%s\".\n", path);
+                fclose(file);
                 exit(74);
         }
 
         const size_t bytes_read = fread(buffer, sizeof(char), file_size, file);
         if (bytes_read < file_size) {
                 fprintf(stderr, "Could not read file \"%s\".\n", path);
+                fclose(file);
                 exit(74);
         }
 
         buffer[bytes_read] = '\0';
+        free(buffer);
         fclose(file);
         return buffer;
 }
