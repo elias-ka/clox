@@ -108,7 +108,7 @@ static enum interpret_result run(void)
                 disassemble_instruction(vm.chunk,
                                         (int)(vm.ip - vm.chunk->code));
 #endif
-                uint8_t instruction;
+                __attribute__((unused)) uint8_t instruction;
                 switch (instruction = READ_BYTE()) {
                 case OP_CONSTANT: {
                         const struct value constant = READ_CONSTANT();
@@ -186,6 +186,9 @@ static enum interpret_result run(void)
                         printf("\n");
                         return INTERPRET_OK;
                 }
+                default:
+                        runtime_error("Unknown opcode %d\n", instruction);
+                        return INTERPRET_RUNTIME_ERROR;
                 }
         }
 #undef READ_BYTE
