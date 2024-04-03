@@ -23,6 +23,8 @@ add_executable(clox
         scanner.c
         object.h
         object.c
+        table.h
+        table.c
 )
 
 target_compile_features(clox PRIVATE c_std_11)

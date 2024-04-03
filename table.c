@@ -1,0 +1,128 @@
+#include <string.h>
+
+#include "memutil.h"
+#include "object.h"
+#include "table.h"
+#include "value.h"
+
+#define TABLE_MAX_LOAD 0.75
+
+void table_init(struct table *table)
+{
+        table->len = 0;
+        table->capacity = 0;
+        table->entries = NULL;
+}
+
+void table_free(struct table *table)
+{
+        FREE_ARRAY(struct entry, table->entries, table->capacity);
+        table_init(table);
+}
+
+static struct entry *find_entry(struct entry *entries, int capacity,
+                                const struct obj_string *key)
+{
+        uint32_t index = key->hash % capacity;
+        struct entry *tombstone = NULL;
+
+        for (;;) {
+                struct entry *entry = &entries[index];
+                if (entry->key == NULL) {
+                        if (IS_NIL(entry->value)) {
+                                // bucket is empty
+                                return tombstone ? tombstone : entry;
+                        } else if (!tombstone) {
+                                // bucket had a tombstone
+                                tombstone = entry;
+                        }
+                } else if (entry->key == key) {
+                        // found the key
+                        return entry;
+                }
+
+                // probe linearly if the bucket is occupied
+                index = (index + 1) % capacity;
+        }
+}
+
+static void adjust_capacity(struct table *table, int capacity)
+{
+        struct entry *entries = ALLOCATE(struct entry, capacity);
+        for (int i = 0; i < capacity; i++) {
+                entries[i].key = NULL;
+                entries[i].value = NIL_VAL;
+        }
+
+        table->len = 0;
+        for (int i = 0; i < table->capacity; i++) {
+                struct entry *entry = &table->entries[i];
+                if (entry->key == NULL)
+                        continue;
+
+                struct entry *dest = find_entry(entries, capacity, entry->key);
+                dest->key = entry->key;
+                dest->value = entry->value;
+                table->len++;
+        }
+
+        FREE_ARRAY(struct entry, table->entries, table->capacity);
+        table->entries = entries;
+        table->capacity = capacity;
+}
+
+bool table_set(struct table *table, struct obj_string *key, struct value value)
+{
+        if ((table->len + 1) > (table->capacity * TABLE_MAX_LOAD)) {
+                int capacity = GROW_CAPACITY(table->capacity);
+                adjust_capacity(table, capacity);
+        }
+
+        struct entry *entry = find_entry(table->entries, table->capacity, key);
+        bool is_new_key = entry->key == NULL;
+
+        if (is_new_key && IS_NIL(entry->value))
+                table->len++;
+
+        entry->key = key;
+        entry->value = value;
+        return is_new_key;
+}
+
+bool table_get(struct table *table, const struct obj_string *key, struct value *value)
+{
+        if (table->len == 0)
+                return false;
+
+        struct entry *entry = find_entry(table->entries, table->capacity, key);
+        if (entry->key == NULL)
+                return false;
+
+        *value = entry->value;
+        return true;
+}
+
+bool table_delete(struct table *table, const struct obj_string *key)
+{
+        if (table->len == 0)
+                return false;
+
+        // find the entry
+        struct entry *entry = find_entry(table->entries, table->capacity, key);
+        if (entry->key == NULL)
+                return false;
+
+        // place a tombstone in the entry
+        entry->key = NULL;
+        entry->value = BOOL_VAL(true);
+        return true;
+}
+
+void table_add_all(struct table *source, struct table *dest)
+{
+        for (int i = 0; i < source->capacity; i++) {
+                struct entry *entry = &source->entries[i];
+                if (entry->key != NULL)
+                        table_set(dest, entry->key, entry->value);
+        }
+}
