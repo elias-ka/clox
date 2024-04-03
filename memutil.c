@@ -1,7 +1,7 @@
 #include "memutil.h"
+
 #include "object.h"
 #include "vm.h"
-
 #include <stdlib.h>
 
 void *reallocate(void *ptr, size_t old_size, size_t new_size)

@@ -50,7 +50,7 @@ Cpp11BracedListStyle: false
 DerivePointerAlignment: false
 DisableFormat: false
 ExperimentalAutoDetectBinPacking: false
-IncludeBlocks: Preserve
+IncludeBlocks: Regroup
 IncludeCategories:
   - Regex: '.*'
     Priority: 1
@@ -67,7 +67,7 @@ MaxEmptyLinesToKeep: 1
 NamespaceIndentation: None
 PointerAlignment: Right
 ReflowComments: false
-SortIncludes: Never
+SortIncludes: CaseInsensitive
 SortUsingDeclarations: Never
 SpaceAfterCStyleCast: false
 SpaceAfterTemplateKeyword: true

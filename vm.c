@@ -1,13 +1,13 @@
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-
 #include "vm.h"
-#include "debug.h"
+
 #include "common.h"
 #include "compiler.h"
-#include "object.h"
+#include "debug.h"
 #include "memutil.h"
+#include "object.h"
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
 
 struct vm vm;
 

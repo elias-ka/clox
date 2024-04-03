@@ -1,8 +1,7 @@
 #include "chunk.h"
 
-#include <stdlib.h>
-
 #include "memutil.h"
+#include <stdlib.h>
 
 void chunk_init(struct chunk *chunk)
 {

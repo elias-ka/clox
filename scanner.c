@@ -1,8 +1,7 @@
-#include <stdio.h>
-#include <string.h>
+#include "scanner.h"
 
 #include "common.h"
-#include "scanner.h"
+#include <string.h>
 
 struct scanner {
         const char *start;

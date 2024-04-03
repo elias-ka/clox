@@ -1,7 +1,7 @@
 #include "value.h"
-#include "object.h"
-#include "memutil.h"
 
+#include "memutil.h"
+#include "object.h"
 #include <float.h>
 #include <stdio.h>
 #include <string.h>

@@ -1,9 +1,9 @@
-#include <string.h>
+#include "table.h"
 
 #include "memutil.h"
 #include "object.h"
-#include "table.h"
 #include "value.h"
+#include <string.h>
 
 #define TABLE_MAX_LOAD 0.75
 

@@ -1,8 +1,7 @@
 #include "debug.h"
 
-#include <stdio.h>
-
 #include "value.h"
+#include <stdio.h>
 
 void disassemble_chunk(const struct chunk *chunk, const char *name)
 {

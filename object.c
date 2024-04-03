@@ -1,9 +1,9 @@
-#include "memutil.h"
 #include "object.h"
+
+#include "memutil.h"
 #include "table.h"
 #include "value.h"
 #include "vm.h"
-
 #include <stdio.h>
 #include <string.h>
 

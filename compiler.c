@@ -1,11 +1,11 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include "compiler.h"
 
 #include "common.h"
-#include "compiler.h"
 #include "object.h"
-#include "value.h"
 #include "scanner.h"
+#include "value.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 #ifdef DEBUG_PRINT_CODE
 #include "debug.h"
