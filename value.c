@@ -62,13 +62,8 @@ bool values_equal(struct value a, struct value b)
                 return true;
         case VAL_NUMBER:
                 return (AS_NUMBER(a) - AS_NUMBER(b)) < DBL_EPSILON;
-        case VAL_OBJ: {
-                const struct obj_string *a_str = AS_STRING(a);
-                const struct obj_string *b_str = AS_STRING(b);
-
-                return (a_str->length == b_str->length) &&
-                       (memcmp(a_str->chars, b_str->chars, a_str->length) == 0);
-        }
+        case VAL_OBJ:
+                return AS_OBJ(a) == AS_OBJ(b);
         default:
                 return false;
         }

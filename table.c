@@ -89,12 +89,14 @@ bool table_set(struct table *table, struct obj_string *key, struct value value)
         return is_new_key;
 }
 
-bool table_get(struct table *table, const struct obj_string *key, struct value *value)
+bool table_get(struct table *table, const struct obj_string *key,
+               struct value *value)
 {
         if (table->len == 0)
                 return false;
 
-        struct entry *entry = find_entry(table->entries, table->capacity, key);
+        const struct entry *entry =
+                find_entry(table->entries, table->capacity, key);
         if (entry->key == NULL)
                 return false;
 
@@ -124,5 +126,32 @@ void table_add_all(struct table *source, struct table *dest)
                 struct entry *entry = &source->entries[i];
                 if (entry->key != NULL)
                         table_set(dest, entry->key, entry->value);
+        }
+}
+
+struct obj_string *table_find_string(struct table *table, const char *chars,
+                                     int length, uint32_t hash)
+{
+        if (table->len == 0)
+                return NULL;
+
+        uint32_t index = hash % table->capacity;
+        for (;;) {
+                struct entry *entry = &table->entries[index];
+
+                if (entry->key == NULL) {
+                        // stop if we find an empty non-tombstone entry
+                        if (IS_NIL(entry->value))
+                                return NULL;
+
+                } else if ((entry->key->length == length) &&
+                           (entry->key->hash == hash) &&
+                           (memcmp(entry->key->chars, chars, length) == 0)) {
+                        // found the entry
+                        return entry->key;
+                }
+
+                // probe linearly if the bucket is occupied
+                index = (index + 1) % table->capacity;
         }
 }

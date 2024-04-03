@@ -34,11 +34,13 @@ void vm_init(void)
 {
         reset_stack();
         vm.objects = NULL;
+        table_init(&vm.strings);
 }
 
 void vm_free(void)
 {
         free_objects();
+        table_free(&vm.strings);
 }
 
 void push(struct value v)
