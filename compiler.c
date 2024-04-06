@@ -34,7 +34,7 @@ enum precedence {
         PREC_PRIMARY
 };
 
-typedef void (*parse_fn)(void);
+typedef void (*parse_fn)(bool can_assign);
 
 struct parse_rule {
         parse_fn prefix;
@@ -102,14 +102,14 @@ static void consume(enum token_type type, const char *message)
         error_at_current(message);
 }
 
-static bool current_is(enum token_type type)
+static bool check(enum token_type type)
 {
         return parser.current.type == type;
 }
 
 static bool match(enum token_type type)
 {
-        if (!current_is(type))
+        if (!check(type))
                 return false;
 
         advance();
@@ -163,8 +163,9 @@ static void parse_precedence(enum precedence prec);
 static void expression(void);
 static void statement(void);
 static void declaration(void);
+static uint8_t identifier_constant(const struct token *name);
 
-static void binary(void)
+static void binary(bool can_assign)
 {
         const enum token_type operator_type = parser.previous.type;
         const struct parse_rule *rule = get_rule(operator_type);
@@ -206,7 +207,7 @@ static void binary(void)
         }
 }
 
-static void literal(void)
+static void literal(bool can_assign)
 {
         switch (parser.previous.type) {
         case TOKEN_FALSE:
@@ -223,25 +224,41 @@ static void literal(void)
         }
 }
 
-static void grouping(void)
+static void grouping(bool can_assign)
 {
         expression();
         consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
-static void number(void)
+static void number(bool can_assign)
 {
         const double value = strtod(parser.previous.start, NULL);
         emit_constant(NUMBER_VAL(value));
 }
 
-static void string(void)
+static void string(bool can_assign)
 {
         emit_constant(OBJ_VAL(copy_string(parser.previous.start + 1,
                                           parser.previous.length - 2)));
 }
 
-static void unary(void)
+static void named_variable(struct token name, bool can_assign)
+{
+        uint8_t arg = identifier_constant(&name);
+        if (can_assign && match(TOKEN_EQUAL)) {
+                expression();
+                emit_bytes(OP_SET_GLOBAL, arg);
+        } else {
+                emit_bytes(OP_GET_GLOBAL, arg);
+        }
+}
+
+static void variable(bool can_assign)
+{
+        named_variable(parser.previous, can_assign);
+}
+
+static void unary(bool can_assign)
 {
         const enum token_type operator_type = parser.previous.type;
 
@@ -279,7 +296,7 @@ struct parse_rule rules[40] = {
         [TOKEN_GREATER_EQUAL] = { NULL, binary, PREC_COMPARISON },
         [TOKEN_LESS] = { NULL, binary, PREC_COMPARISON },
         [TOKEN_LESS_EQUAL] = { NULL, binary, PREC_COMPARISON },
-        [TOKEN_IDENTIFIER] = { NULL, NULL, PREC_NONE },
+        [TOKEN_IDENTIFIER] = { variable, NULL, PREC_NONE },
         [TOKEN_STRING] = { string, NULL, PREC_NONE },
         [TOKEN_NUMBER] = { number, NULL, PREC_NONE },
         [TOKEN_AND] = { NULL, NULL, PREC_NONE },
@@ -311,12 +328,17 @@ static void parse_precedence(enum precedence prec)
                 return;
         }
 
-        prefix_rule();
+        bool can_assign = prec <= PREC_ASSIGNMENT;
+        prefix_rule(can_assign);
 
         while (prec <= get_rule(parser.current.type)->precedence) {
                 advance();
                 parse_fn infix_rule = get_rule(parser.previous.type)->infix;
-                infix_rule();
+                infix_rule(can_assign);
+        }
+
+        if (can_assign && match(TOKEN_EQUAL)) {
+                error("Invalid assignment target.");
         }
 }
 
@@ -348,7 +370,7 @@ static void expression(void)
 
 static void var_declaration(void)
 {
-        const uint8_t global = parse_variable("Expect variable name.");
+        uint8_t global = parse_variable("Expect variable name.");
 
         if (match(TOKEN_EQUAL))
                 expression();
@@ -377,7 +399,7 @@ static void synchronize(void)
 {
         parser.panic_mode = false;
 
-        while (!current_is(TOKEN_EOF)) {
+        while (!check(TOKEN_EOF)) {
                 if (parser.previous.type == TOKEN_SEMICOLON)
                         return;
 

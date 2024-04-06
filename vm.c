@@ -2,7 +2,6 @@
 
 #include "common.h"
 #include "compiler.h"
-#include "debug.h"
 #include "memutil.h"
 #include "object.h"
 #include <stdarg.h>
@@ -116,8 +115,6 @@ static enum interpret_result run(void)
                 case OP_CONSTANT: {
                         const struct value constant = READ_CONSTANT();
                         push(constant);
-                        value_print(constant);
-                        printf("\n");
                         break;
                 }
                 case OP_NIL: {
@@ -136,11 +133,31 @@ static enum interpret_result run(void)
                         pop();
                         break;
                 }
+                case OP_GET_GLOBAL: {
+                        struct obj_string *name = READ_STRING();
+                        struct value value;
+                        if (!table_get(&vm.globals, name, &value)) {
+                                runtime_error("Undefined variable '%s'.",
+                                              name->chars);
+                                return INTERPRET_RUNTIME_ERROR;
+                        }
+                        push(value);
+                        break;
+                }
                 case OP_DEFINE_GLOBAL: {
-                        struct obj_string *name =
-                                AS_STRING(READ_CONSTANT());
+                        struct obj_string *name = READ_STRING();
                         table_set(&vm.globals, name, peek(0));
                         pop();
+                        break;
+                }
+                case OP_SET_GLOBAL: {
+                        struct obj_string *name = READ_STRING();
+                        if (table_set(&vm.globals, name, peek(0))) {
+                                table_delete(&vm.globals, name);
+                                runtime_error("Undefined variable '%s'.",
+                                              name->chars);
+                                return INTERPRET_RUNTIME_ERROR;
+                        }
                         break;
                 }
                 case OP_EQUAL: {
