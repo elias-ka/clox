@@ -34,12 +34,14 @@ void vm_init(void)
 {
         reset_stack();
         vm.objects = NULL;
+        table_init(&vm.globals);
         table_init(&vm.strings);
 }
 
 void vm_free(void)
 {
         free_objects();
+        table_free(&vm.globals);
         table_free(&vm.strings);
 }
 
@@ -84,6 +86,7 @@ static enum interpret_result run(void)
 {
 #define READ_BYTE() (*vm.ip++)
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+#define READ_STRING() AS_STRING(READ_CONSTANT())
 #define BINARY_OP(value_type, op)                                   \
         do {                                                        \
                 if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) {   \
@@ -130,6 +133,13 @@ static enum interpret_result run(void)
                         break;
                 }
                 case OP_POP: {
+                        pop();
+                        break;
+                }
+                case OP_DEFINE_GLOBAL: {
+                        struct obj_string *name =
+                                AS_STRING(READ_CONSTANT());
+                        table_set(&vm.globals, name, peek(0));
                         pop();
                         break;
                 }
@@ -200,6 +210,7 @@ static enum interpret_result run(void)
         }
 #undef READ_BYTE
 #undef READ_CONSTANT
+#undef READ_STRING
 #undef BINARY_OP
 }
 

@@ -12,6 +12,7 @@ struct vm {
         uint8_t *ip;
         struct value stack[STACK_MAX];
         struct value *stack_top;
+        struct table globals;
         struct table strings;
         struct obj *objects;
 };
