@@ -129,6 +129,10 @@ static enum interpret_result run(void)
                         push(BOOL_VAL(false));
                         break;
                 }
+                case OP_POP: {
+                        pop();
+                        break;
+                }
                 case OP_EQUAL: {
                         const struct value b = pop();
                         const struct value a = pop();

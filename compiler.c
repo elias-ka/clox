@@ -330,6 +330,13 @@ static void expression(void)
         parse_precedence(PREC_ASSIGNMENT);
 }
 
+static void expression_statement(void)
+{
+        expression();
+        consume(TOKEN_SEMICOLON, "Expect ';' after expression.");
+        emit_byte(OP_POP);
+}
+
 static void print_statement(void)
 {
         expression();
@@ -346,6 +353,8 @@ static void statement(void)
 {
         if (match(TOKEN_PRINT)) {
                 print_statement();
+        } else {
+                expression_statement();
         }
 }
 
