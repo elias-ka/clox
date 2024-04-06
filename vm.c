@@ -181,9 +181,12 @@ static enum interpret_result run(void)
                         push(NUMBER_VAL(-AS_NUMBER(pop())));
                         break;
                 }
-                case OP_RETURN: {
+                case OP_PRINT: {
                         value_print(pop());
                         printf("\n");
+                        break;
+                }
+                case OP_RETURN: {
                         return INTERPRET_OK;
                 }
                 default:

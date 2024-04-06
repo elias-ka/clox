@@ -102,6 +102,20 @@ static void consume(enum token_type type, const char *message)
         error_at_current(message);
 }
 
+static bool current_is(enum token_type type)
+{
+        return parser.current.type == type;
+}
+
+static bool match(enum token_type type)
+{
+        if (!current_is(type))
+                return false;
+
+        advance();
+        return true;
+}
+
 static void emit_byte(uint8_t byte)
 {
         chunk_write(current_chunk(), byte, parser.previous.line);
@@ -147,6 +161,8 @@ static void end_compiler(void)
 static const struct parse_rule *get_rule(enum token_type type);
 static void parse_precedence(enum precedence prec);
 static void expression(void);
+static void statement(void);
+static void declaration(void);
 
 static void binary(void)
 {
@@ -314,6 +330,25 @@ static void expression(void)
         parse_precedence(PREC_ASSIGNMENT);
 }
 
+static void print_statement(void)
+{
+        expression();
+        consume(TOKEN_SEMICOLON, "Expect ';' after value.");
+        emit_byte(OP_PRINT);
+}
+
+static void declaration(void)
+{
+        statement();
+}
+
+static void statement(void)
+{
+        if (match(TOKEN_PRINT)) {
+                print_statement();
+        }
+}
+
 bool compile(const char *source, struct chunk *chunk)
 {
         scanner_init(source);
@@ -322,8 +357,11 @@ bool compile(const char *source, struct chunk *chunk)
         parser.panic_mode = false;
 
         advance();
-        expression();
-        consume(TOKEN_EOF, "Expect end of expression.");
+
+        while (!match(TOKEN_EOF)) {
+                declaration();
+        }
+
         end_compiler();
         return !parser.had_error;
 }
