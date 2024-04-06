@@ -14,6 +14,7 @@ static struct obj *allocate_object(size_t size, enum obj_type type)
 {
         struct obj *object = reallocate(NULL, 0, size);
         object->type = type;
+        object->next = vm.objects;
         vm.objects = object;
         return object;
 }
@@ -23,6 +24,7 @@ static struct obj_string *allocate_string(char *chars, int length,
 {
         struct obj_string *string = ALLOCATE_OBJ(struct obj_string, OBJ_STRING);
         string->chars = chars;
+        string->length = length;
         string->hash = hash;
         table_set(&vm.strings, string, NIL_VAL);
         return string;
