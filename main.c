@@ -12,6 +12,7 @@ static void repl(void)
                         break;
                 }
                 vm_interpret(line);
+                printf("\n");
         }
 }
 
