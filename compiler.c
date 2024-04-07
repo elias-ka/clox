@@ -167,6 +167,7 @@ static uint8_t identifier_constant(const struct token *name);
 
 static void binary(bool can_assign)
 {
+        (void)can_assign;
         const enum token_type operator_type = parser.previous.type;
         const struct parse_rule *rule = get_rule(operator_type);
         parse_precedence((enum precedence)(rule->precedence + 1));
@@ -209,6 +210,7 @@ static void binary(bool can_assign)
 
 static void literal(bool can_assign)
 {
+        (void)can_assign;
         switch (parser.previous.type) {
         case TOKEN_FALSE:
                 emit_byte(OP_FALSE);
@@ -226,18 +228,21 @@ static void literal(bool can_assign)
 
 static void grouping(bool can_assign)
 {
+        (void)can_assign;
         expression();
         consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
 static void number(bool can_assign)
 {
+        (void)can_assign;
         const double value = strtod(parser.previous.start, NULL);
         emit_constant(NUMBER_VAL(value));
 }
 
 static void string(bool can_assign)
 {
+        (void)can_assign;
         emit_constant(OBJ_VAL(copy_string(parser.previous.start + 1,
                                           parser.previous.length - 2)));
 }
@@ -260,6 +265,7 @@ static void variable(bool can_assign)
 
 static void unary(bool can_assign)
 {
+        (void)can_assign;
         const enum token_type operator_type = parser.previous.type;
 
         parse_precedence(PREC_UNARY);
