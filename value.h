@@ -33,8 +33,8 @@ struct value {
         ((struct value){ VAL_OBJ, { .obj = (struct obj *)object } })
 
 struct value_array {
-        int capacity;
-        int count;
+        size_t capacity;
+        size_t count;
         struct value *values;
 };
 

@@ -19,7 +19,7 @@ static struct obj *allocate_object(size_t size, enum obj_type type)
         return object;
 }
 
-static struct obj_string *allocate_string(char *chars, int length,
+static struct obj_string *allocate_string(char *chars, size_t length,
                                           uint32_t hash)
 {
         struct obj_string *string = ALLOCATE_OBJ(struct obj_string, OBJ_STRING);
@@ -30,17 +30,17 @@ static struct obj_string *allocate_string(char *chars, int length,
         return string;
 }
 
-static uint32_t hash_string(const char *key, int length)
+static uint32_t hash_string(const char *key, size_t length)
 {
         uint32_t hash = 2166136261u;
-        for (int i = 0; i < length; i++) {
+        for (size_t i = 0; i < length; i++) {
                 hash ^= (uint8_t)key[i];
                 hash *= 16777619;
         }
         return hash;
 }
 
-struct obj_string *take_string(char *chars, int length)
+struct obj_string *take_string(char *chars, size_t length)
 {
         uint32_t hash = hash_string(chars, length);
         struct obj_string *interned =
@@ -53,7 +53,7 @@ struct obj_string *take_string(char *chars, int length)
         return allocate_string(chars, length, hash);
 }
 
-struct obj_string *copy_string(const char *chars, int length)
+struct obj_string *copy_string(const char *chars, size_t length)
 {
         uint32_t hash = hash_string(chars, length);
         struct obj_string *interned =

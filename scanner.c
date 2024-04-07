@@ -174,6 +174,8 @@ static enum token_type identifier_type(void)
                 return check_keyword(1, 2, "ar", TOKEN_VAR);
         case 'w':
                 return check_keyword(1, 4, "hile", TOKEN_WHILE);
+        default:
+                break;
         }
         return TOKEN_IDENTIFIER;
 }

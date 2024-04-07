@@ -16,7 +16,7 @@ void value_array_init(struct value_array *array)
 void value_array_write(struct value_array *array, struct value v)
 {
         if (array->capacity < (array->count + 1)) {
-                const int old_capacity = array->capacity;
+                const size_t old_capacity = array->capacity;
                 array->capacity = GROW_CAPACITY(old_capacity);
                 array->values = GROW_ARRAY(struct value, array->values,
                                            old_capacity, array->capacity);

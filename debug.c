@@ -7,14 +7,14 @@ void disassemble_chunk(const struct chunk *chunk, const char *name)
 {
         printf("== %s ==\n", name);
 
-        for (int offset = 0; offset < chunk->size;
+        for (size_t offset = 0; offset < chunk->size;
              offset = disassemble_instruction(chunk, offset)) {
                 // empty loop body
         }
 }
 
-static int constant_instruction(const char *name, const struct chunk *chunk,
-                                int offset)
+static size_t constant_instruction(const char *name, const struct chunk *chunk,
+                                size_t offset)
 {
         const uint8_t constant = chunk->code[offset + 1];
         printf("%-16s %4d '", name, constant);
@@ -23,15 +23,15 @@ static int constant_instruction(const char *name, const struct chunk *chunk,
         return offset + 2;
 }
 
-static int simple_instruction(const char *name, int offset)
+static size_t simple_instruction(const char *name, size_t offset)
 {
         printf("%s\n", name);
         return offset + 1;
 }
 
-int disassemble_instruction(const struct chunk *chunk, int offset)
+size_t disassemble_instruction(const struct chunk *chunk, size_t offset)
 {
-        printf("%04d ", offset);
+        printf("%04zu ", offset);
         if ((offset > 0) &&
             (chunk->lines[offset] == chunk->lines[offset - 1])) {
                 printf("   | ");

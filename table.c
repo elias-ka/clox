@@ -20,10 +20,10 @@ void table_free(struct table *table)
         table_init(table);
 }
 
-static struct entry *find_entry(struct entry *entries, int capacity,
+static struct entry *find_entry(struct entry *entries, size_t capacity,
                                 const struct obj_string *key)
 {
-        uint32_t index = key->hash % capacity;
+        size_t index = key->hash % capacity;
         struct entry *tombstone = NULL;
 
         for (;;) {
@@ -46,16 +46,16 @@ static struct entry *find_entry(struct entry *entries, int capacity,
         }
 }
 
-static void adjust_capacity(struct table *table, int capacity)
+static void adjust_capacity(struct table *table, size_t capacity)
 {
         struct entry *entries = ALLOCATE(struct entry, capacity);
-        for (int i = 0; i < capacity; i++) {
+        for (size_t i = 0; i < capacity; i++) {
                 entries[i].key = NULL;
                 entries[i].value = NIL_VAL;
         }
 
         table->len = 0;
-        for (int i = 0; i < table->capacity; i++) {
+        for (size_t i = 0; i < table->capacity; i++) {
                 struct entry *entry = &table->entries[i];
                 if (entry->key == NULL)
                         continue;
@@ -73,8 +73,9 @@ static void adjust_capacity(struct table *table, int capacity)
 
 bool table_set(struct table *table, struct obj_string *key, struct value value)
 {
-        if ((table->len + 1) > (table->capacity * TABLE_MAX_LOAD)) {
-                int capacity = GROW_CAPACITY(table->capacity);
+        if (((double)(table->len + 1)) >
+            ((double)table->capacity * TABLE_MAX_LOAD)) {
+                const size_t capacity = GROW_CAPACITY(table->capacity);
                 adjust_capacity(table, capacity);
         }
 
@@ -122,7 +123,7 @@ bool table_delete(struct table *table, const struct obj_string *key)
 
 void table_add_all(struct table *source, struct table *dest)
 {
-        for (int i = 0; i < source->capacity; i++) {
+        for (size_t i = 0; i < source->capacity; i++) {
                 struct entry *entry = &source->entries[i];
                 if (entry->key != NULL)
                         table_set(dest, entry->key, entry->value);
@@ -130,12 +131,12 @@ void table_add_all(struct table *source, struct table *dest)
 }
 
 struct obj_string *table_find_string(struct table *table, const char *chars,
-                                     int length, uint32_t hash)
+                                     size_t length, uint32_t hash)
 {
         if (table->len == 0)
                 return NULL;
 
-        uint32_t index = hash % table->capacity;
+        size_t index = hash % table->capacity;
         for (;;) {
                 struct entry *entry = &table->entries[index];
 

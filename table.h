@@ -9,8 +9,8 @@ struct entry {
 };
 
 struct table {
-        int len;
-        int capacity;
+        size_t len;
+        size_t capacity;
         struct entry *entries;
 };
 
@@ -22,6 +22,6 @@ bool table_get(struct table *table, const struct obj_string *key,
 bool table_delete(struct table *table, const struct obj_string *key);
 void table_add_all(struct table *source, struct table *dest);
 struct obj_string *table_find_string(struct table *table, const char *chars,
-                                     int length, uint32_t hash);
+                                     size_t length, uint32_t hash);
 
 #endif // CLOX__TABLE_H_

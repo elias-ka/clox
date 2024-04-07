@@ -27,8 +27,8 @@ enum op_code {
 };
 
 struct chunk {
-        int size;
-        int capacity;
+        size_t size;
+        size_t capacity;
         uint8_t *code;
         // TODO: Storing the line number for each instruction is not really necessary
         //       and wastes some memory.

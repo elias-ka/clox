@@ -71,7 +71,7 @@ static void concatenate(void)
         const struct obj_string *b = AS_STRING(pop());
         const struct obj_string *a = AS_STRING(pop());
 
-        const int length = a->length + b->length;
+        const size_t length = a->length + b->length;
         char *chars = ALLOCATE(char, length + 1);
         memcpy(chars, a->chars, a->length);
         memcpy(chars + a->length, b->chars, b->length);
@@ -110,8 +110,8 @@ static enum interpret_result run(void)
                 disassemble_instruction(vm.chunk,
                                         (int)(vm.ip - vm.chunk->code));
 #endif
-                __attribute__((unused)) uint8_t instruction;
-                switch (instruction = READ_BYTE()) {
+                const uint8_t instruction = READ_BYTE();
+                switch (instruction) {
                 case OP_CONSTANT: {
                         const struct value constant = READ_CONSTANT();
                         push(constant);
