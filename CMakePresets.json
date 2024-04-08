@@ -1,0 +1,36 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 22,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "installDir": "${sourceDir}/install/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_C_INCLUDE_WHAT_YOU_USE": "/usr/bin/iwyu"
+      }
+    },
+    {
+      "name": "x86_64-Linux-Debug",
+      "inherits": "base",
+      "architecture": {
+        "value": "x86_64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
+        "CMAKE_C_COMPILER": "/usr/bin/clang",
+        "DEBUG_TRACE_EXECUTION": "ON",
+        "DEBUG_PRINT_CODE": "ON"
+      }
+    }
+  ]
+}
