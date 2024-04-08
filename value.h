@@ -1,7 +1,8 @@
 #ifndef CLOX__VALUE_H_
 #define CLOX__VALUE_H_
 
-#include "common.h"
+#include <stdbool.h>
+#include <stddef.h>
 
 struct obj;
 struct obj_string;

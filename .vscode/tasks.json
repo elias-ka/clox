@@ -13,7 +13,8 @@
         "--enable=all",
         "--project=compile_commands.json",
         "--suppress=missingIncludeSystem"
-      ]
+      ],
+      "problemMatcher": []
     }
   ]
 }

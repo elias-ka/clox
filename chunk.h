@@ -1,7 +1,8 @@
 #ifndef CLOX__CHUNK_H_
 #define CLOX__CHUNK_H_
 
-#include "common.h"
+#include <stddef.h>
+#include <stdint.h>
 #include "value.h"
 
 enum op_code {

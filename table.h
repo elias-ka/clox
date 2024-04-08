@@ -2,6 +2,7 @@
 #define CLOX__TABLE_H_
 
 #include "value.h"
+#include <stdint.h>
 
 struct entry {
         struct obj_string *key;

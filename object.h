@@ -1,8 +1,8 @@
 #ifndef CLOX__OBJECT_H_
 #define CLOX__OBJECT_H_
 
-#include "common.h"
 #include "value.h"
+#include <stdint.h>
 
 #define OBJ_TYPE(value) (AS_OBJ(value)->type)
 

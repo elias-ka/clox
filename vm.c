@@ -1,7 +1,9 @@
 #include "vm.h"
 
-#include "common.h"
 #include "compiler.h"
+#ifdef DEBUG_TRACE_EXECUTION
+#include "debug.h"
+#endif
 #include "memutil.h"
 #include "object.h"
 #include <stdarg.h>
