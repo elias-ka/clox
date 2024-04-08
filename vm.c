@@ -1,5 +1,6 @@
 #include "vm.h"
 
+#include "chunk.h"
 #include "compiler.h"
 #ifdef DEBUG_TRACE_EXECUTION
 #include "debug.h"
@@ -7,6 +8,7 @@
 #include "memutil.h"
 #include "object.h"
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -133,6 +135,16 @@ static enum interpret_result run(void)
                 }
                 case OP_POP: {
                         pop();
+                        break;
+                }
+                case OP_SET_LOCAL: {
+                        uint8_t slot = READ_BYTE();
+                        vm.stack[slot] = peek(0);
+                        break;
+                }
+                case OP_GET_LOCAL: {
+                        uint8_t slot = READ_BYTE();
+                        push(vm.stack[slot]);
                         break;
                 }
                 case OP_GET_GLOBAL: {

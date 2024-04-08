@@ -1,5 +1,6 @@
 #include "debug.h"
 
+#include "chunk.h"
 #include "value.h"
 #include <stdio.h>
 
@@ -14,7 +15,7 @@ void disassemble_chunk(const struct chunk *chunk, const char *name)
 }
 
 static size_t constant_instruction(const char *name, const struct chunk *chunk,
-                                size_t offset)
+                                   size_t offset)
 {
         const uint8_t constant = chunk->code[offset + 1];
         printf("%-16s %4d '", name, constant);
@@ -27,6 +28,14 @@ static size_t simple_instruction(const char *name, size_t offset)
 {
         printf("%s\n", name);
         return offset + 1;
+}
+
+static size_t byte_instruction(const char *name, const struct chunk *chunk,
+                               size_t offset)
+{
+        const uint8_t slot = chunk->code[offset + 1];
+        printf("%-16s %4d\n", name, slot);
+        return offset + 2;
 }
 
 size_t disassemble_instruction(const struct chunk *chunk, size_t offset)
@@ -51,6 +60,10 @@ size_t disassemble_instruction(const struct chunk *chunk, size_t offset)
                 return simple_instruction("OP_FALSE", offset);
         case OP_POP:
                 return simple_instruction("OP_POP", offset);
+        case OP_GET_LOCAL:
+                return byte_instruction("OP_GET_LOCAL", chunk, offset);
+        case OP_SET_LOCAL:
+                return byte_instruction("OP_SET_LOCAL", chunk, offset);
         case OP_GET_GLOBAL:
                 return constant_instruction("OP_GET_GLOBAL", chunk, offset);
         case OP_DEFINE_GLOBAL:
