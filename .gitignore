@@ -46,5 +46,12 @@
 build/
 cmake-build-debug/
 
+# CMake
+CMakeFiles/
+CMakeCache.txt
+CMakeUserPresets.json
+compile_commands.json
+
+
 .idea
 .cache
