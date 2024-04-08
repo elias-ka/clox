@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef DEBUG_PRINT_CODE
 #include "debug.h"
@@ -47,13 +48,13 @@ struct parse_rule {
 
 struct local {
         struct token name;
-        uint8_t depth;
+        int depth;
 };
 
 struct compiler {
         struct local locals[UINT8_COUNT];
-        uint8_t local_count;
-        uint8_t scope_depth;
+        int local_count;
+        int scope_depth;
 };
 
 static struct chunk *current_chunk(void)
@@ -185,6 +186,16 @@ static void begin_scope(void)
 static void end_scope(void)
 {
         current->scope_depth--;
+
+        // Pop the locals that were declared in this scope
+        while (current->local_count > 0 &&
+               current->locals[current->local_count - 1].depth >
+                       current->scope_depth) {
+                // TODO: Instead of popping one by one, we could have an OP_POPN instruction,
+                // that pops N values from the stack.
+                emit_byte(OP_POP);
+                current->local_count--;
+        }
 }
 
 static const struct parse_rule *get_rule(enum token_type type);
@@ -382,14 +393,63 @@ static uint8_t identifier_constant(const struct token *name)
         return make_constant(OBJ_VAL(copy_string(name->start, name->length)));
 }
 
+static bool identifiers_equal(const struct token *a, const struct token *b)
+{
+        if (a->length != b->length)
+                return false;
+
+        return memcmp(a->start, b->start, a->length) == 0;
+}
+
+static void add_local(struct token name)
+{
+        if (current->local_count == UINT8_COUNT) {
+                error("Too many local variables in function. Maximum is 256.");
+                return;
+        }
+
+        struct local *local = &current->locals[current->local_count++];
+        local->name = name;
+        local->depth = current->scope_depth;
+}
+
+static void declare_variable(void)
+{
+        if (current->scope_depth == 0)
+                return;
+
+        const struct token *name = &parser.previous;
+        for (int i = current->local_count - 1; i >= 0; i--) {
+                const struct local *local = &current->locals[i];
+                if (local->depth != -1 && local->depth < current->scope_depth)
+                        break;
+
+                if (identifiers_equal(name, &local->name))
+                        error("Variable with this name already declared in this scope.");
+        }
+        add_local(*name);
+}
+
 static uint8_t parse_variable(const char *error_msg)
 {
         consume(TOKEN_IDENTIFIER, error_msg);
+
+        declare_variable();
+        // At runtime, locals aren’t looked up by name.
+        // There’s no need to stuff the variable’s name into the constant table,
+        // so if the declaration is inside a local scope, we return a dummy table index instead.
+        if (current->scope_depth > 0)
+                return 0;
+
         return identifier_constant(&parser.previous);
 }
 
 static void define_variable(uint8_t global)
 {
+        // Local scope, no need to define a global variable
+        if (current->scope_depth > 0)
+                return;
+
         emit_bytes(OP_DEFINE_GLOBAL, global);
 }
 
