@@ -35,6 +35,7 @@ set_target_properties(clox PROPERTIES
         C_EXTENSIONS OFF
         C_STANDARD_REQUIRED ON
 )
+
 target_compile_options(clox PRIVATE
         "$<${gcc_like_c}:-Wall;-Wextra;-Werror;-pedantic>"
 
@@ -46,3 +47,11 @@ target_compile_definitions(clox PRIVATE
         "$<$<BOOL:${DEBUG_TRACE_EXECUTION}>:DEBUG_TRACE_EXECUTION>"
         "$<$<BOOL:${DEBUG_PRINT_CODE}>:DEBUG_PRINT_CODE>"
 )
+
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    message(STATUS "Using ${CCACHE_PROGRAM} as compiler launcher")
+    set_target_properties(clox PROPERTIES
+            C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}"
+    )
+endif()
