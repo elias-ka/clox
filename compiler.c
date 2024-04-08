@@ -4,6 +4,7 @@
 #include "object.h"
 #include "scanner.h"
 #include "value.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -18,7 +19,9 @@ struct parser {
         bool panic_mode;
 };
 
-static struct parser parser;
+struct parser parser;
+struct compiler *current = NULL;
+struct chunk *compiling_chunk;
 
 enum precedence {
         PREC_NONE,
@@ -42,7 +45,16 @@ struct parse_rule {
         enum precedence precedence;
 };
 
-static struct chunk *compiling_chunk;
+struct local {
+        struct token name;
+        uint8_t depth;
+};
+
+struct compiler {
+        struct local locals[UINT8_COUNT];
+        uint8_t local_count;
+        uint8_t scope_depth;
+};
 
 static struct chunk *current_chunk(void)
 {
@@ -148,6 +160,13 @@ static void emit_constant(struct value value)
         emit_bytes(OP_CONSTANT, make_constant(value));
 }
 
+static void compiler_init(struct compiler *compiler)
+{
+        compiler->local_count = 0;
+        compiler->scope_depth = 0;
+        current = compiler;
+}
+
 static void end_compiler(void)
 {
         emit_return();
@@ -156,6 +175,16 @@ static void end_compiler(void)
                 disassemble_chunk(current_chunk(), "bytecode");
         }
 #endif
+}
+
+static void begin_scope(void)
+{
+        current->scope_depth++;
+}
+
+static void end_scope(void)
+{
+        current->scope_depth--;
 }
 
 static const struct parse_rule *get_rule(enum token_type type);
@@ -374,6 +403,15 @@ static void expression(void)
         parse_precedence(PREC_ASSIGNMENT);
 }
 
+static void block(void)
+{
+        while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
+                declaration();
+        }
+
+        consume(TOKEN_RIGHT_BRACE, "Expect '}' after block.");
+}
+
 static void var_declaration(void)
 {
         uint8_t global = parse_variable("Expect variable name.");
@@ -443,6 +481,10 @@ static void statement(void)
 {
         if (match(TOKEN_PRINT)) {
                 print_statement();
+        } else if (match(TOKEN_LEFT_BRACE)) {
+                begin_scope();
+                block();
+                end_scope();
         } else {
                 expression_statement();
         }
@@ -451,6 +493,9 @@ static void statement(void)
 bool compile(const char *source, struct chunk *chunk)
 {
         scanner_init(source);
+        struct compiler compiler;
+        compiler_init(&compiler);
+
         compiling_chunk = chunk;
         parser.had_error = false;
         parser.panic_mode = false;
