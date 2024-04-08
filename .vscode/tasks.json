@@ -1,0 +1,19 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Cppcheck",
+      "detail": "Run cppcheck on the project",
+      "type": "shell",
+      "command": "cppcheck",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "args": [
+        "--enable=all",
+        "--project=compile_commands.json",
+        "--suppress=missingIncludeSystem"
+      ]
+    }
+  ]
+}
