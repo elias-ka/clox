@@ -41,7 +41,7 @@ BreakBeforeInheritanceComma: false
 BreakBeforeTernaryOperators: false
 BreakStringLiterals: false
 ColumnLimit: 80
-CommentPragmas: '^ IWYU pragma:'
+CommentPragmas: "^ IWYU pragma:"
 CompactNamespaces: false
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
 ConstructorInitializerIndentWidth: 8
@@ -52,23 +52,23 @@ DisableFormat: false
 ExperimentalAutoDetectBinPacking: false
 IncludeBlocks: Regroup
 IncludeCategories:
-  - Regex: '.*'
+  - Regex: ".*"
     Priority: 1
-IncludeIsMainRegex: '(Test)?$'
+IncludeIsMainRegex: "(Test)?$"
 IndentCaseLabels: false
 IndentGotoLabels: false
 IndentPPDirectives: None
 IndentWidth: 8
 IndentWrappedFunctionNames: false
 KeepEmptyLinesAtTheStartOfBlocks: false
-MacroBlockBegin: ''
-MacroBlockEnd: ''
+MacroBlockBegin: ""
+MacroBlockEnd: ""
 MaxEmptyLinesToKeep: 1
 NamespaceIndentation: None
 PointerAlignment: Right
 ReflowComments: false
 SortIncludes: CaseInsensitive
-SortUsingDeclarations: Never
+SortUsingDeclarations: false
 SpaceAfterCStyleCast: false
 SpaceAfterTemplateKeyword: true
 SpaceBeforeAssignmentOperators: true
@@ -85,4 +85,3 @@ SpacesInParentheses: false
 SpacesInSquareBrackets: false
 TabWidth: 8
 UseTab: Never
-...

@@ -1,9 +1,9 @@
 #ifndef CLOX__CHUNK_H_
 #define CLOX__CHUNK_H_
 
+#include "value.h"
 #include <stddef.h>
 #include <stdint.h>
-#include "value.h"
 
 enum op_code {
         OP_CONSTANT,
@@ -11,8 +11,8 @@ enum op_code {
         OP_TRUE,
         OP_FALSE,
         OP_POP,
-	OP_GET_LOCAL,
-	OP_SET_LOCAL,
+        OP_GET_LOCAL,
+        OP_SET_LOCAL,
         OP_GET_GLOBAL,
         OP_DEFINE_GLOBAL,
         OP_SET_GLOBAL,
