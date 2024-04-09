@@ -48,6 +48,8 @@ target_compile_definitions(clox PRIVATE
         "$<$<BOOL:${DEBUG_PRINT_CODE}>:DEBUG_PRINT_CODE>"
 )
 
+target_link_libraries(clox PRIVATE m)
+
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
     message(STATUS "Using ${CCACHE_PROGRAM} as compiler launcher")

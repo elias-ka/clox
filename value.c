@@ -3,6 +3,7 @@
 #include "memutil.h"
 #include "object.h"
 #include <float.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -61,7 +62,7 @@ bool values_equal(struct value a, struct value b)
         case VAL_NIL:
                 return true;
         case VAL_NUMBER:
-                return (AS_NUMBER(a) - AS_NUMBER(b)) < DBL_EPSILON;
+                return fabs(AS_NUMBER(a) - AS_NUMBER(b)) < DBL_EPSILON;
         case VAL_OBJ:
                 return AS_OBJ(a) == AS_OBJ(b);
         default:
