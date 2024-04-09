@@ -12,7 +12,8 @@
       "args": [
         "--enable=all",
         "--project=compile_commands.json",
-        "--suppress=missingIncludeSystem"
+        "--suppress=missingIncludeSystem",
+        "--suppress=unusedFunction"
       ],
       "problemMatcher": []
     }
