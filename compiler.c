@@ -1,5 +1,6 @@
 #include "compiler.h"
 
+#include "chunk.h"
 #include "common.h"
 #include "object.h"
 #include "scanner.h"
@@ -140,6 +141,14 @@ static void emit_bytes(uint8_t byte1, uint8_t byte2)
         emit_byte(byte2);
 }
 
+static size_t emit_jump(uint8_t instruction)
+{
+        emit_byte(instruction);
+        emit_byte(0xff);
+        emit_byte(0xff);
+        return current_chunk()->size - 2;
+}
+
 static void emit_return(void)
 {
         emit_byte(OP_RETURN);
@@ -159,6 +168,18 @@ static uint8_t make_constant(struct value value)
 static void emit_constant(struct value value)
 {
         emit_bytes(OP_CONSTANT, make_constant(value));
+}
+
+static void patch_jump(size_t offset)
+{
+        struct chunk *cc = current_chunk();
+        size_t jump = cc->size - offset - 2;
+
+        if (jump > UINT16_MAX)
+                error("Too much code to jump over.");
+
+        cc->code[offset] = (jump >> 8) & 0xff;
+        cc->code[offset + 1] = jump & 0xff;
 }
 
 static void compiler_init(struct compiler *compiler)
@@ -281,6 +302,19 @@ static void number(bool can_assign)
         emit_constant(NUMBER_VAL(value));
 }
 
+static void or_(bool can_assign)
+{
+        (void)can_assign;
+        size_t else_jump = emit_jump(OP_JUMP_IF_FALSE);
+        size_t end_jump = emit_jump(OP_JUMP);
+
+        patch_jump(else_jump);
+        emit_byte(OP_POP);
+
+        parse_precedence(PREC_OR);
+        patch_jump(end_jump);
+}
+
 static void string(bool can_assign)
 {
         (void)can_assign;
@@ -335,6 +369,8 @@ static void unary(bool can_assign)
         }
 }
 
+static void and_(bool can_assign);
+
 struct parse_rule rules[40] = {
         [TOKEN_LEFT_PAREN] = { grouping, NULL, PREC_NONE },
         [TOKEN_RIGHT_PAREN] = { NULL, NULL, PREC_NONE },
@@ -358,7 +394,7 @@ struct parse_rule rules[40] = {
         [TOKEN_IDENTIFIER] = { variable, NULL, PREC_NONE },
         [TOKEN_STRING] = { string, NULL, PREC_NONE },
         [TOKEN_NUMBER] = { number, NULL, PREC_NONE },
-        [TOKEN_AND] = { NULL, NULL, PREC_NONE },
+        [TOKEN_AND] = { NULL, and_, PREC_AND },
         [TOKEN_CLASS] = { NULL, NULL, PREC_NONE },
         [TOKEN_ELSE] = { NULL, NULL, PREC_NONE },
         [TOKEN_FALSE] = { literal, NULL, PREC_NONE },
@@ -366,7 +402,7 @@ struct parse_rule rules[40] = {
         [TOKEN_FUN] = { NULL, NULL, PREC_NONE },
         [TOKEN_IF] = { NULL, NULL, PREC_NONE },
         [TOKEN_NIL] = { literal, NULL, PREC_NONE },
-        [TOKEN_OR] = { NULL, NULL, PREC_NONE },
+        [TOKEN_OR] = { NULL, or_, PREC_OR },
         [TOKEN_PRINT] = { NULL, NULL, PREC_NONE },
         [TOKEN_RETURN] = { NULL, NULL, PREC_NONE },
         [TOKEN_SUPER] = { NULL, NULL, PREC_NONE },
@@ -488,6 +524,17 @@ static void define_variable(uint8_t global)
         emit_bytes(OP_DEFINE_GLOBAL, global);
 }
 
+static void and_(bool can_assign)
+{
+        (void)can_assign;
+        size_t end_jump = emit_jump(OP_JUMP_IF_FALSE);
+
+        emit_byte(OP_POP);
+        parse_precedence(PREC_AND);
+
+        patch_jump(end_jump);
+}
+
 static const struct parse_rule *get_rule(enum token_type type)
 {
         return &rules[type];
@@ -525,6 +572,27 @@ static void expression_statement(void)
         expression();
         consume(TOKEN_SEMICOLON, "Expect ';' after expression.");
         emit_byte(OP_POP);
+}
+
+static void if_statement(void)
+{
+        consume(TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
+        expression();
+        consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+
+        size_t then_jump = emit_jump(OP_JUMP_IF_FALSE);
+        emit_byte(OP_POP);
+        statement();
+
+        size_t else_jump = emit_jump(OP_JUMP);
+
+        patch_jump(then_jump);
+        emit_byte(OP_POP);
+
+        if (match(TOKEN_ELSE))
+                statement();
+
+        patch_jump(else_jump);
 }
 
 static void print_statement(void)
@@ -576,6 +644,8 @@ static void statement(void)
 {
         if (match(TOKEN_PRINT)) {
                 print_statement();
+        } else if (match(TOKEN_IF)) {
+                if_statement();
         } else if (match(TOKEN_LEFT_BRACE)) {
                 begin_scope();
                 block();
