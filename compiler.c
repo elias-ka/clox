@@ -141,6 +141,18 @@ static void emit_bytes(uint8_t byte1, uint8_t byte2)
         emit_byte(byte2);
 }
 
+static void emit_loop(size_t loop_start)
+{
+        emit_byte(OP_LOOP);
+
+        size_t offset = current_chunk()->size - loop_start + 2;
+        if (offset > UINT16_MAX)
+                error("Loop body too large.");
+
+        emit_byte((offset >> 8) & 0xff);
+        emit_byte(offset & 0xff);
+}
+
 static size_t emit_jump(uint8_t instruction)
 {
         emit_byte(instruction);
@@ -602,6 +614,22 @@ static void print_statement(void)
         emit_byte(OP_PRINT);
 }
 
+static void while_statement(void)
+{
+        size_t loop_start = current_chunk()->size;
+        consume(TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
+        expression();
+        consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+
+        const size_t exit_jump = emit_jump(OP_JUMP_IF_FALSE);
+        emit_byte(OP_POP);
+        statement();
+        emit_loop(loop_start);
+
+        patch_jump(exit_jump);
+        emit_byte(OP_POP);
+}
+
 static void synchronize(void)
 {
         parser.panic_mode = false;
@@ -646,6 +674,8 @@ static void statement(void)
                 print_statement();
         } else if (match(TOKEN_IF)) {
                 if_statement();
+        } else if (match(TOKEN_WHILE)) {
+                while_statement();
         } else if (match(TOKEN_LEFT_BRACE)) {
                 begin_scope();
                 block();
