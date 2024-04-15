@@ -26,10 +26,21 @@
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
         "CMAKE_C_COMPILER": "/usr/bin/clang",
         "DEBUG_TRACE_EXECUTION": "ON",
         "DEBUG_PRINT_CODE": "ON"
+      }
+    },
+    {
+      "name": "x86_64-Linux-Release",
+      "inherits": "base",
+      "architecture": {
+        "value": "x86_64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "/usr/bin/clang"
       }
     }
   ]

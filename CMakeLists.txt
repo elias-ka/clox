@@ -42,6 +42,9 @@ target_compile_options(clox PRIVATE
         "$<$<CONFIG:DEBUG>:"
         "-Og;-Wconversion;-Wno-sign-conversion;"
         "-Wno-unused-parameter;-Wno-unused-variable;-Wno-unused-function>"
+
+        "$<$<CONFIG:RELEASE>:"
+        "-Wno-unused-parameter>"
 )
 target_compile_definitions(clox PRIVATE
         "$<$<BOOL:${DEBUG_TRACE_EXECUTION}>:DEBUG_TRACE_EXECUTION>"
