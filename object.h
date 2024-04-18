@@ -31,7 +31,7 @@ struct obj_string *take_string(char *chars, size_t length);
 struct obj_string *copy_string(const char *chars, size_t length);
 void object_print(struct value value);
 
-static inline bool is_obj_type(struct value v, enum obj_type type)
+inline bool is_obj_type(struct value v, enum obj_type type)
 {
         return IS_OBJ(v) && (AS_OBJ(v)->type == type);
 }
