@@ -23,8 +23,6 @@ struct parser {
 };
 
 struct parser parser;
-struct compiler *current = NULL;
-struct chunk *compiling_chunk;
 
 enum precedence {
         PREC_NONE,
@@ -53,15 +51,22 @@ struct local {
         int depth;
 };
 
+enum function_type { TYPE_FUNCTION, TYPE_SCRIPT };
+
 struct compiler {
+        struct obj_function *fn;
+        enum function_type fn_type;
+
         struct local locals[UINT8_COUNT];
         int local_count;
         int scope_depth;
 };
 
+struct compiler *current = NULL;
+
 static struct chunk *current_chunk(void)
 {
-        return compiling_chunk;
+        return &current->fn->chunk;
 }
 
 static void error_at(const struct token *tok, const char *message)
@@ -195,21 +200,33 @@ static void patch_jump(size_t offset)
         cc->code[offset + 1] = jump & 0xff;
 }
 
-static void compiler_init(struct compiler *compiler)
+static void compiler_init(struct compiler *compiler, enum function_type type)
 {
+        compiler->fn = NULL;
+        compiler->fn_type = type;
         compiler->local_count = 0;
         compiler->scope_depth = 0;
+        compiler->fn = new_function();
         current = compiler;
+
+        struct local *local = &current->locals[current->local_count++];
+        local->depth = 0;
+        local->name.start = "";
+        local->name.length = 0;
 }
 
-static void end_compiler(void)
+static struct obj_function *end_compiler(void)
 {
         emit_return();
+        struct obj_function *fn = current->fn;
+
 #ifdef DEBUG_PRINT_CODE
         if (!parser.had_error) {
-                disassemble_chunk(current_chunk(), "bytecode");
+                disassemble_chunk(current_chunk(),
+                                  fn->name ? fn->name->chars : "<script>");
         }
 #endif
+        return fn;
 }
 
 static void begin_scope(void)
@@ -734,13 +751,12 @@ static void statement(void)
         }
 }
 
-bool compile(const char *source, struct chunk *chunk)
+struct obj_function *compile(const char *source)
 {
         scanner_init(source);
         struct compiler compiler;
-        compiler_init(&compiler);
+        compiler_init(&compiler, TYPE_SCRIPT);
 
-        compiling_chunk = chunk;
         parser.had_error = false;
         parser.panic_mode = false;
 
@@ -750,6 +766,6 @@ bool compile(const char *source, struct chunk *chunk)
                 declaration();
         }
 
-        end_compiler();
-        return !parser.had_error;
+        struct obj_function *fn = end_compiler();
+        return parser.had_error ? NULL : fn;
 }

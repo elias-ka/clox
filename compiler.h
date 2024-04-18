@@ -1,8 +1,8 @@
 #ifndef CLOX__COMPILER_H_
 #define CLOX__COMPILER_H_
 
-#include "chunk.h"
+#include "object.h"
 
-bool compile(const char *source, struct chunk *chunk);
+struct obj_function *compile(const char *source);
 
 #endif // CLOX__COMPILER_H_

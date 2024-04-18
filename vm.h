@@ -1,15 +1,26 @@
 #ifndef CLOX__VM_H_
 #define CLOX__VM_H_
 
-#include "chunk.h"
+#include "common.h"
+#include "object.h"
 #include "table.h"
 #include "value.h"
+#include <stddef.h>
+#include <stdint.h>
 
-#define STACK_MAX 256
+#define FRAMES_MAX 64
+#define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
+
+struct call_frame {
+        struct obj_function *fn;
+        uint8_t *ip;
+        struct value *slots;
+};
 
 struct vm {
-        struct chunk *chunk;
-        uint8_t *ip;
+        struct call_frame frames[FRAMES_MAX];
+        size_t frame_count;
+
         struct value stack[STACK_MAX];
         struct value *stack_top;
         struct table globals;

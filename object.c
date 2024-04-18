@@ -80,6 +80,10 @@ struct obj_string *copy_string(const char *chars, size_t length)
 
 static void function_print(struct obj_function *fn)
 {
+        if (fn->name == NULL) {
+                printf("<script>");
+                return;
+        }
         printf("<fn %s>", fn->name->chars);
 }
 

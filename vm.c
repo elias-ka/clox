@@ -17,6 +17,7 @@ struct vm vm;
 static void reset_stack(void)
 {
         vm.stack_top = vm.stack;
+        vm.frame_count = 0;
 }
 
 static void runtime_error(const char *format, ...)
@@ -27,8 +28,9 @@ static void runtime_error(const char *format, ...)
         va_end(args);
         fputs("\n", stderr);
 
-        const size_t instruction = vm.ip - vm.chunk->code - 1;
-        const int line = vm.chunk->lines[instruction];
+        struct call_frame *frame = &vm.frames[vm.frame_count - 1];
+        size_t instruction = frame->ip - frame->fn->chunk.code - 1;
+        int line = frame->fn->chunk.lines[instruction];
         fprintf(stderr, "[line %d] in script\n", line);
         reset_stack();
 }
@@ -87,9 +89,12 @@ static void concatenate(void)
 
 static enum interpret_result run(void)
 {
-#define READ_BYTE() (*vm.ip++)
-#define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
-#define READ_SHORT() (vm.ip += 2, (uint16_t)((vm.ip[-2] << 8) | vm.ip[-1]))
+        struct call_frame *frame = &vm.frames[vm.frame_count - 1];
+
+#define READ_BYTE() (*frame->ip++)
+#define READ_CONSTANT() (frame->fn->chunk.constants.values[READ_BYTE()])
+#define READ_SHORT() \
+        (frame->ip += 2, (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
 #define READ_STRING() AS_STRING(READ_CONSTANT())
 #define BINARY_OP(value_type, op)                                   \
         do {                                                        \
@@ -112,8 +117,9 @@ static enum interpret_result run(void)
                         printf(" ]");
                 }
                 printf("\n");
-                disassemble_instruction(vm.chunk,
-                                        (int)(vm.ip - vm.chunk->code));
+                disassemble_instruction(
+                        &frame->fn->chunk,
+                        (int)(frame->ip - frame->fn->chunk.code));
 #endif
                 const uint8_t instruction = READ_BYTE();
                 switch (instruction) {
@@ -140,12 +146,12 @@ static enum interpret_result run(void)
                 }
                 case OP_SET_LOCAL: {
                         uint8_t slot = READ_BYTE();
-                        vm.stack[slot] = peek(0);
+                        frame->slots[slot] = peek(0);
                         break;
                 }
                 case OP_GET_LOCAL: {
                         uint8_t slot = READ_BYTE();
-                        push(vm.stack[slot]);
+                        push(frame->slots[slot]);
                         break;
                 }
                 case OP_GET_GLOBAL: {
@@ -234,19 +240,19 @@ static enum interpret_result run(void)
                 }
                 case OP_JUMP: {
                         uint16_t offset = READ_SHORT();
-                        vm.ip += offset;
+                        frame->ip += offset;
                         break;
                 }
                 case OP_JUMP_IF_FALSE: {
                         uint16_t offset = READ_SHORT();
                         if (is_falsey(peek(0))) {
-                                vm.ip += offset;
+                                frame->ip += offset;
                         }
                         break;
                 }
                 case OP_LOOP: {
                         uint16_t offset = READ_SHORT();
-                        vm.ip -= offset;
+                        frame->ip -= offset;
                         break;
                 }
                 case OP_RETURN: {
@@ -266,17 +272,15 @@ static enum interpret_result run(void)
 
 enum interpret_result vm_interpret(const char *source)
 {
-        struct chunk chunk;
-        chunk_init(&chunk);
-
-        if (!compile(source, &chunk)) {
-                chunk_free(&chunk);
+        struct obj_function *fn = compile(source);
+        if (!fn)
                 return INTERPRET_COMPILE_ERROR;
-        }
 
-        vm.chunk = &chunk;
-        vm.ip = vm.chunk->code;
-        const enum interpret_result result = run();
-        chunk_free(&chunk);
-        return result;
+        push(OBJ_VAL(fn));
+        struct call_frame *frame = &vm.frames[vm.frame_count++];
+        frame->fn = fn;
+        frame->ip = fn->chunk.code;
+        frame->slots = vm.stack;
+
+        return run();
 }
