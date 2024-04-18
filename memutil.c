@@ -28,6 +28,12 @@ void free_object(struct obj *object)
                 FREE(struct obj_string, object);
                 break;
         }
+        case OBJ_FUNCTION: {
+                struct obj_function *fn = (struct obj_function *)object;
+                chunk_free(&fn->chunk);
+                FREE(struct obj_function, object);
+                break;
+        }
         }
 }
 

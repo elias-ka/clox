@@ -19,6 +19,16 @@ static struct obj *allocate_object(size_t size, enum obj_type type)
         return object;
 }
 
+struct obj_function *new_function()
+{
+        struct obj_function *fn =
+                ALLOCATE_OBJ(struct obj_function, OBJ_FUNCTION);
+        fn->arity = 0;
+        fn->name = NULL;
+        chunk_init(&fn->chunk);
+        return fn;
+}
+
 static struct obj_string *allocate_string(char *chars, size_t length,
                                           uint32_t hash)
 {
@@ -68,11 +78,19 @@ struct obj_string *copy_string(const char *chars, size_t length)
         return allocate_string(heap_chars, length, hash);
 }
 
+static void function_print(struct obj_function *fn)
+{
+        printf("<fn %s>", fn->name->chars);
+}
+
 void object_print(struct value value)
 {
         switch (OBJ_TYPE(value)) {
         case OBJ_STRING:
                 printf("%s", AS_CSTRING(value));
+                break;
+        case OBJ_FUNCTION:
+                function_print(AS_FUNCTION(value));
                 break;
         }
 }
