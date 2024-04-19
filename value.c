@@ -2,9 +2,7 @@
 
 #include "memutil.h"
 #include "object.h"
-#include <float.h>
 #include <math.h>
-#include <stdio.h>
 #include <string.h>
 
 void value_array_init(struct value_array *array)

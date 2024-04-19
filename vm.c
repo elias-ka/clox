@@ -1,15 +1,13 @@
 #include "vm.h"
 
 #include "chunk.h"
+#include "common.h"
 #include "compiler.h"
 #ifdef DEBUG_TRACE_EXECUTION
 #include "debug.h"
 #endif
 #include "memutil.h"
 #include "object.h"
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 
 struct vm vm;
@@ -71,12 +69,12 @@ struct value pop(void)
         return *vm.stack_top;
 }
 
-static struct value peek(int distance)
+static struct value peek(s32 distance)
 {
         return vm.stack_top[-1 - distance];
 }
 
-static bool call(struct obj_function *fn, int n_args)
+static bool call(struct obj_function *fn, s32 n_args)
 {
         if (n_args != fn->arity) {
                 runtime_error("Expected %d arguments but got %d.", fn->arity,
@@ -96,7 +94,7 @@ static bool call(struct obj_function *fn, int n_args)
         return true;
 }
 
-static bool call_value(struct value callee, int n_args)
+static bool call_value(struct value callee, s32 n_args)
 {
         if (IS_OBJ(callee)) {
                 switch (OBJ_TYPE(callee)) {
@@ -138,7 +136,7 @@ static enum interpret_result run(void)
 #define READ_BYTE() (*frame->ip++)
 #define READ_CONSTANT() (frame->fn->chunk.constants.values[READ_BYTE()])
 #define READ_SHORT() \
-        (frame->ip += 2, (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
+        (frame->ip += 2, (u16)((frame->ip[-2] << 8) | frame->ip[-1]))
 #define READ_STRING() AS_STRING(READ_CONSTANT())
 #define BINARY_OP(value_type, op)                                   \
         do {                                                        \
@@ -165,7 +163,7 @@ static enum interpret_result run(void)
                         &frame->fn->chunk,
                         (int)(frame->ip - frame->fn->chunk.code));
 #endif
-                const uint8_t instruction = READ_BYTE();
+                const u8 instruction = READ_BYTE();
                 switch (instruction) {
                 case OP_CONSTANT: {
                         const struct value constant = READ_CONSTANT();
@@ -189,12 +187,12 @@ static enum interpret_result run(void)
                         break;
                 }
                 case OP_SET_LOCAL: {
-                        uint8_t slot = READ_BYTE();
+                        u8 slot = READ_BYTE();
                         frame->slots[slot] = peek(0);
                         break;
                 }
                 case OP_GET_LOCAL: {
-                        uint8_t slot = READ_BYTE();
+                        u8 slot = READ_BYTE();
                         push(frame->slots[slot]);
                         break;
                 }
@@ -283,24 +281,24 @@ static enum interpret_result run(void)
                         break;
                 }
                 case OP_JUMP: {
-                        uint16_t offset = READ_SHORT();
+                        u16 offset = READ_SHORT();
                         frame->ip += offset;
                         break;
                 }
                 case OP_JUMP_IF_FALSE: {
-                        uint16_t offset = READ_SHORT();
+                        u16 offset = READ_SHORT();
                         if (is_falsey(peek(0))) {
                                 frame->ip += offset;
                         }
                         break;
                 }
                 case OP_LOOP: {
-                        uint16_t offset = READ_SHORT();
+                        u16 offset = READ_SHORT();
                         frame->ip -= offset;
                         break;
                 }
                 case OP_CALL: {
-                        int n_args = READ_BYTE();
+                        s32 n_args = READ_BYTE();
                         if (!call_value(peek(n_args), n_args)) {
                                 return INTERPRET_RUNTIME_ERROR;
                         }

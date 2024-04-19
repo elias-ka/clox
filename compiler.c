@@ -6,8 +6,6 @@
 #include "scanner.h"
 #include "value.h"
 #include <limits.h>
-#include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -48,7 +46,7 @@ struct parse_rule {
 
 struct local {
         struct token name;
-        int depth;
+        s32 depth;
 };
 
 enum function_type { TYPE_FUNCTION, TYPE_SCRIPT };
@@ -59,8 +57,8 @@ struct compiler {
         enum function_type fn_type;
 
         struct local locals[UINT8_COUNT];
-        int local_count;
-        int scope_depth;
+        s32 local_count;
+        s32 scope_depth;
 };
 
 struct compiler *current = NULL;
@@ -137,12 +135,12 @@ static bool match(enum token_type type)
         return true;
 }
 
-static void emit_byte(uint8_t byte)
+static void emit_byte(u8 byte)
 {
         chunk_write(current_chunk(), byte, parser.previous.line);
 }
 
-static void emit_bytes(uint8_t byte1, uint8_t byte2)
+static void emit_bytes(u8 byte1, u8 byte2)
 {
         emit_byte(byte1);
         emit_byte(byte2);
@@ -160,7 +158,7 @@ static void emit_loop(size_t loop_start)
         emit_byte(offset & 0xff);
 }
 
-static size_t emit_jump(uint8_t instruction)
+static size_t emit_jump(u8 instruction)
 {
         emit_byte(instruction);
         emit_byte(0xff);
@@ -174,7 +172,7 @@ static void emit_return(void)
         emit_byte(OP_RETURN);
 }
 
-static uint8_t make_constant(struct value value)
+static u8 make_constant(struct value value)
 {
         const size_t constant = chunk_add_constant(current_chunk(), value);
         if (constant > UINT8_MAX) {
@@ -182,7 +180,7 @@ static uint8_t make_constant(struct value value)
                 return 0;
         }
 
-        return (uint8_t)constant;
+        return (u8)constant;
 }
 
 static void emit_constant(struct value value)
@@ -263,9 +261,9 @@ static void parse_precedence(enum precedence prec);
 static void expression(void);
 static void statement(void);
 static void declaration(void);
-static uint8_t identifier_constant(const struct token *name);
-static int resolve_local(struct compiler *compiler, struct token *name);
-static uint8_t argument_list(void);
+static u8 identifier_constant(const struct token *name);
+static s32 resolve_local(struct compiler *compiler, struct token *name);
+static u8 argument_list(void);
 
 static void binary(bool can_assign)
 {
@@ -313,7 +311,7 @@ static void binary(bool can_assign)
 static void call(bool can_assign)
 {
         (void)can_assign;
-        uint8_t n_args = argument_list();
+        u8 n_args = argument_list();
         emit_bytes(OP_CALL, n_args);
 }
 
@@ -371,9 +369,9 @@ static void string(bool can_assign)
 
 static void named_variable(struct token name, bool can_assign)
 {
-        uint8_t get_op;
-        uint8_t set_op;
-        int arg = resolve_local(current, &name);
+        u8 get_op;
+        u8 set_op;
+        s32 arg = resolve_local(current, &name);
 
         if (arg != -1) {
                 get_op = OP_GET_LOCAL;
@@ -386,9 +384,9 @@ static void named_variable(struct token name, bool can_assign)
 
         if (can_assign && match(TOKEN_EQUAL)) {
                 expression();
-                emit_bytes(set_op, (uint8_t)arg);
+                emit_bytes(set_op, (u8)arg);
         } else {
-                emit_bytes(get_op, (uint8_t)arg);
+                emit_bytes(get_op, (u8)arg);
         }
 }
 
@@ -484,7 +482,7 @@ static void parse_precedence(enum precedence prec)
         }
 }
 
-static uint8_t identifier_constant(const struct token *name)
+static u8 identifier_constant(const struct token *name)
 {
         return make_constant(OBJ_VAL(copy_string(name->start, name->length)));
 }
@@ -497,9 +495,9 @@ static bool identifiers_equal(const struct token *a, const struct token *b)
         return memcmp(a->start, b->start, a->length) == 0;
 }
 
-static int resolve_local(struct compiler *compiler, struct token *name)
+static s32 resolve_local(struct compiler *compiler, struct token *name)
 {
-        for (int i = compiler->local_count - 1; i >= 0; i--) {
+        for (s32 i = compiler->local_count - 1; i >= 0; i--) {
                 struct local *local = &compiler->locals[i];
                 if (identifiers_equal(name, &local->name)) {
                         if (local->depth == -1) {
@@ -530,7 +528,7 @@ static void declare_variable(void)
                 return;
 
         const struct token *name = &parser.previous;
-        for (int i = current->local_count - 1; i >= 0; i--) {
+        for (s32 i = current->local_count - 1; i >= 0; i--) {
                 const struct local *local = &current->locals[i];
                 if (local->depth != -1 && local->depth < current->scope_depth)
                         break;
@@ -541,7 +539,7 @@ static void declare_variable(void)
         add_local(*name);
 }
 
-static uint8_t parse_variable(const char *error_msg)
+static u8 parse_variable(const char *error_msg)
 {
         consume(TOKEN_IDENTIFIER, error_msg);
 
@@ -563,7 +561,7 @@ static void mark_initialized(void)
         current->locals[current->local_count - 1].depth = current->scope_depth;
 }
 
-static void define_variable(uint8_t global)
+static void define_variable(u8 global)
 {
         // Local scope, no need to define a global variable
         if (current->scope_depth > 0) {
@@ -574,9 +572,9 @@ static void define_variable(uint8_t global)
         emit_bytes(OP_DEFINE_GLOBAL, global);
 }
 
-static uint8_t argument_list(void)
+static u8 argument_list(void)
 {
-        uint8_t n_args = 0;
+        u8 n_args = 0;
         if (!check(TOKEN_RIGHT_PAREN)) {
                 do {
                         expression();
@@ -633,7 +631,7 @@ static void function(enum function_type type)
                         if (current->fn->arity > 255) {
                                 error("Cannot have more than 255 parameters.");
                         }
-                        uint8_t param_constant =
+                        u8 param_constant =
                                 parse_variable("Expect parameter name.");
                         define_variable(param_constant);
                 } while (match(TOKEN_COMMA));
@@ -649,7 +647,7 @@ static void function(enum function_type type)
 
 static void fun_declaration(void)
 {
-        uint8_t global = parse_variable("Expect function name.");
+        u8 global = parse_variable("Expect function name.");
         mark_initialized();
         function(TYPE_FUNCTION);
         define_variable(global);
@@ -657,7 +655,7 @@ static void fun_declaration(void)
 
 static void var_declaration(void)
 {
-        uint8_t global = parse_variable("Expect variable name.");
+        u8 global = parse_variable("Expect variable name.");
 
         if (match(TOKEN_EQUAL))
                 expression();

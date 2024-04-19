@@ -2,8 +2,8 @@
 #define CLOX__OBJECT_H_
 
 #include "chunk.h"
+#include "common.h"
 #include "value.h"
-#include <stdint.h>
 
 #define OBJ_TYPE(value) (AS_OBJ(value)->type)
 
@@ -26,7 +26,7 @@ struct obj {
 
 struct obj_function {
         struct obj obj;
-        int arity;
+        s32 arity;
         struct chunk chunk;
         struct obj_string *name;
 };
@@ -35,7 +35,7 @@ struct obj_string {
         struct obj obj;
         size_t length;
         char *chars;
-        uint32_t hash;
+        u32 hash;
 };
 
 struct obj_function *new_function();

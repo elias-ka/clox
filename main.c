@@ -25,7 +25,7 @@ static char *read_file(const char *path)
         }
 
         fseek(file, 0L, SEEK_END);
-        const int64_t file_size = ftell(file);
+        const s64 file_size = ftell(file);
         rewind(file);
 
         if (file_size <= 0) {
@@ -41,7 +41,7 @@ static char *read_file(const char *path)
                 exit(74);
         }
 
-        const int64_t bytes_read = fread(buffer, sizeof(char), file_size, file);
+        const s64 bytes_read = fread(buffer, sizeof(char), file_size, file);
         if (bytes_read < file_size) {
                 fprintf(stderr, "Could not read file \"%s\".\n", path);
                 fclose(file);
@@ -65,7 +65,7 @@ static void run_file(const char *path)
                 exit(70);
 }
 
-int main(int argc, char *argv[])
+s32 main(s32 argc, char *argv[])
 {
         vm_init();
         if (argc == 1) {

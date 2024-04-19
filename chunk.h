@@ -1,9 +1,8 @@
 #ifndef CLOX__CHUNK_H_
 #define CLOX__CHUNK_H_
 
+#include "common.h"
 #include "value.h"
-#include <stddef.h>
-#include <stdint.h>
 
 enum op_code {
         OP_CONSTANT,
@@ -36,15 +35,15 @@ enum op_code {
 struct chunk {
         size_t size;
         size_t capacity;
-        uint8_t *code;
+        u8 *code;
         // TODO: Storing the line number for each instruction is not really necessary
         //       and wastes some memory.
-        int *lines;
+        s32 *lines;
         struct value_array constants;
 };
 
 void chunk_init(struct chunk *chunk);
-void chunk_write(struct chunk *chunk, uint8_t byte, int line);
+void chunk_write(struct chunk *chunk, u8 byte, s32 line);
 void chunk_free(struct chunk *chunk);
 
 /**

@@ -1,6 +1,8 @@
 #ifndef CLOX__SCANNER_H_
 #define CLOX__SCANNER_H_
 
+#include "common.h"
+
 enum token_type {
         // Single-character tokens.
         TOKEN_LEFT_PAREN,
@@ -52,8 +54,8 @@ enum token_type {
 struct token {
         enum token_type type;
         const char *start;
-        int length;
-        int line;
+        s32 length;
+        s32 line;
 };
 
 void scanner_init(const char *source);

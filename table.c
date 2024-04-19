@@ -131,7 +131,7 @@ void table_add_all(struct table *source, struct table *dest)
 }
 
 struct obj_string *table_find_string(struct table *table, const char *chars,
-                                     size_t length, uint32_t hash)
+                                     size_t length, u32 hash)
 {
         if (table->len == 0)
                 return NULL;

@@ -1,7 +1,7 @@
 #ifndef CLOX__MEMUTIL_H_
 #define CLOX__MEMUTIL_H_
 
-#include <stddef.h>
+#include "common.h"
 
 #define ALLOCATE(type, count) \
         (type *)reallocate(NULL, 0, sizeof(type) * (count))

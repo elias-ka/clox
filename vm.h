@@ -5,15 +5,13 @@
 #include "object.h"
 #include "table.h"
 #include "value.h"
-#include <stddef.h>
-#include <stdint.h>
 
 #define FRAMES_MAX 64
 #define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
 
 struct call_frame {
         struct obj_function *fn;
-        uint8_t *ip;
+        u8 *ip;
         struct value *slots;
 };
 

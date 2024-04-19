@@ -1,8 +1,8 @@
 #include "debug.h"
 
 #include "chunk.h"
+#include "common.h"
 #include "value.h"
-#include <stdio.h>
 
 void disassemble_chunk(const struct chunk *chunk, const char *name)
 {
@@ -17,7 +17,7 @@ void disassemble_chunk(const struct chunk *chunk, const char *name)
 static size_t constant_instruction(const char *name, const struct chunk *chunk,
                                    size_t offset)
 {
-        const uint8_t constant = chunk->code[offset + 1];
+        const u8 constant = chunk->code[offset + 1];
         printf("%-16s %4d '", name, constant);
         value_print(chunk->constants.values[constant]);
         printf("'\n");
@@ -33,15 +33,15 @@ static size_t simple_instruction(const char *name, size_t offset)
 static size_t byte_instruction(const char *name, const struct chunk *chunk,
                                size_t offset)
 {
-        const uint8_t slot = chunk->code[offset + 1];
+        const u8 slot = chunk->code[offset + 1];
         printf("%-16s %4d\n", name, slot);
         return offset + 2;
 }
 
-static size_t jump_instruction(const char *name, int sign,
+static size_t jump_instruction(const char *name, s32 sign,
                                const struct chunk *chunk, size_t offset)
 {
-        uint16_t jump = (uint16_t)(chunk->code[offset + 1] << 8);
+        u16 jump = (u16)(chunk->code[offset + 1] << 8);
         jump |= chunk->code[offset + 2];
         printf("%-16s %4zu -> %lu\n", name, offset, offset + 3 + sign * jump);
         return offset + 3;
@@ -57,7 +57,7 @@ size_t disassemble_instruction(const struct chunk *chunk, size_t offset)
                 printf("%4d ", chunk->lines[offset]);
         }
 
-        const uint8_t instruction = chunk->code[offset];
+        const u8 instruction = chunk->code[offset];
         switch (instruction) {
         case OP_CONSTANT:
                 return constant_instruction("OP_CONSTANT", chunk, offset);

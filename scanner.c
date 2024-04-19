@@ -1,12 +1,11 @@
 #include "scanner.h"
 
-#include <stdbool.h>
 #include <string.h>
 
 struct scanner {
         const char *start;
         const char *current;
-        int line;
+        s32 line;
 };
 
 static struct scanner scanner;
@@ -70,7 +69,7 @@ static struct token make_token(enum token_type type)
         return (struct token){
                 .type = type,
                 .start = scanner.start,
-                .length = (int)(scanner.current - scanner.start),
+                .length = (s32)(scanner.current - scanner.start),
                 .line = scanner.line,
         };
 }
@@ -80,7 +79,7 @@ static struct token error_token(const char *message)
         return (struct token){
                 .type = TOKEN_ERROR,
                 .start = message,
-                .length = (int)strlen(message),
+                .length = (s32)strlen(message),
                 .line = scanner.line,
         };
 }
@@ -113,7 +112,7 @@ static void skip_whitespace(void)
         }
 }
 
-static enum token_type check_keyword(int start, int length, const char *rest,
+static enum token_type check_keyword(s32 start, s32 length, const char *rest,
                                      enum token_type type)
 {
         const bool is_keyword =
