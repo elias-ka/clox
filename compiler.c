@@ -54,6 +54,7 @@ struct local {
 enum function_type { TYPE_FUNCTION, TYPE_SCRIPT };
 
 struct compiler {
+        struct compiler *enclosing;
         struct obj_function *fn;
         enum function_type fn_type;
 
@@ -202,12 +203,17 @@ static void patch_jump(size_t offset)
 
 static void compiler_init(struct compiler *compiler, enum function_type type)
 {
+        compiler->enclosing = current;
         compiler->fn = NULL;
         compiler->fn_type = type;
         compiler->local_count = 0;
         compiler->scope_depth = 0;
         compiler->fn = new_function();
         current = compiler;
+        if (type != TYPE_SCRIPT) {
+                current->fn->name = copy_string(parser.previous.start,
+                                                parser.previous.length);
+        }
 
         struct local *local = &current->locals[current->local_count++];
         local->depth = 0;
@@ -226,6 +232,8 @@ static struct obj_function *end_compiler(void)
                                   fn->name ? fn->name->chars : "<script>");
         }
 #endif
+
+        current = current->enclosing;
         return fn;
 }
 
@@ -540,6 +548,9 @@ static uint8_t parse_variable(const char *error_msg)
 
 static void mark_initialized(void)
 {
+        if (current->scope_depth == 0)
+                return;
+
         current->locals[current->local_count - 1].depth = current->scope_depth;
 }
 
@@ -582,6 +593,41 @@ static void block(void)
         }
 
         consume(TOKEN_RIGHT_BRACE, "Expect '}' after block.");
+}
+
+static void function(enum function_type type)
+{
+        struct compiler compiler;
+        compiler_init(&compiler, type);
+        begin_scope();
+
+        consume(TOKEN_LEFT_PAREN, "Expect '(' after function name.");
+        if (!check(TOKEN_RIGHT_PAREN)) {
+                do {
+                        current->fn->arity++;
+                        if (current->fn->arity > 255) {
+                                error("Cannot have more than 255 parameters.");
+                        }
+                        uint8_t param_constant =
+                                parse_variable("Expect parameter name.");
+                        define_variable(param_constant);
+                } while (match(TOKEN_COMMA));
+        }
+
+        consume(TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+        consume(TOKEN_LEFT_BRACE, "Expect '{' before function body.");
+        block();
+
+        struct obj_function *fn = end_compiler();
+        emit_bytes(OP_CONSTANT, make_constant(OBJ_VAL(fn)));
+}
+
+static void fun_declaration(void)
+{
+        uint8_t global = parse_variable("Expect function name.");
+        mark_initialized();
+        function(TYPE_FUNCTION);
+        define_variable(global);
 }
 
 static void var_declaration(void)
@@ -723,7 +769,9 @@ static void synchronize(void)
 
 static void declaration(void)
 {
-        if (match(TOKEN_VAR))
+        if (match(TOKEN_FUN))
+                fun_declaration();
+        else if (match(TOKEN_VAR))
                 var_declaration();
         else
                 statement();
