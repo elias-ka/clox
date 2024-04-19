@@ -26,7 +26,7 @@ static void runtime_error(const char *format, ...)
         va_end(args);
         fputs("\n", stderr);
 
-        for (size_t i = vm.frame_count - 1; i >= 0; i--) {
+        for (s32 i = vm.frame_count - 1; i >= 0; i--) {
                 const struct call_frame *frame = &vm.frames[i];
                 const struct obj_function *fn = frame->fn;
                 const size_t instruction = frame->ip - fn->chunk.code - 1;
