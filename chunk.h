@@ -29,6 +29,7 @@ enum op_code {
         OP_JUMP,
         OP_JUMP_IF_FALSE,
         OP_LOOP,
+        OP_CALL,
         OP_RETURN,
 };
 

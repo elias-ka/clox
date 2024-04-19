@@ -170,6 +170,7 @@ static size_t emit_jump(uint8_t instruction)
 
 static void emit_return(void)
 {
+        emit_byte(OP_NIL);
         emit_byte(OP_RETURN);
 }
 
@@ -264,6 +265,7 @@ static void statement(void);
 static void declaration(void);
 static uint8_t identifier_constant(const struct token *name);
 static int resolve_local(struct compiler *compiler, struct token *name);
+static uint8_t argument_list(void);
 
 static void binary(bool can_assign)
 {
@@ -306,6 +308,13 @@ static void binary(bool can_assign)
         default:
                 return;
         }
+}
+
+static void call(bool can_assign)
+{
+        (void)can_assign;
+        uint8_t n_args = argument_list();
+        emit_bytes(OP_CALL, n_args);
 }
 
 static void literal(bool can_assign)
@@ -410,7 +419,7 @@ static void unary(bool can_assign)
 static void and_(bool can_assign);
 
 struct parse_rule rules[40] = {
-        [TOKEN_LEFT_PAREN] = { grouping, NULL, PREC_NONE },
+        [TOKEN_LEFT_PAREN] = { grouping, call, PREC_CALL },
         [TOKEN_RIGHT_PAREN] = { NULL, NULL, PREC_NONE },
         [TOKEN_LEFT_BRACE] = { NULL, NULL, PREC_NONE },
         [TOKEN_RIGHT_BRACE] = { NULL, NULL, PREC_NONE },
@@ -563,6 +572,22 @@ static void define_variable(uint8_t global)
         }
 
         emit_bytes(OP_DEFINE_GLOBAL, global);
+}
+
+static uint8_t argument_list(void)
+{
+        uint8_t n_args = 0;
+        if (!check(TOKEN_RIGHT_PAREN)) {
+                do {
+                        expression();
+                        if (n_args == 255) {
+                                error("Cannot have more than 255 arguments.");
+                        }
+                        n_args++;
+                } while (match(TOKEN_COMMA));
+        }
+        consume(TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
+        return n_args;
 }
 
 static void and_(bool can_assign)
@@ -724,6 +749,20 @@ static void print_statement(void)
         emit_byte(OP_PRINT);
 }
 
+static void return_statement(void)
+{
+        if (current->fn_type == TYPE_SCRIPT)
+                error("Cannot return from top-level code.");
+
+        if (match(TOKEN_SEMICOLON)) {
+                emit_return();
+        } else {
+                expression();
+                consume(TOKEN_SEMICOLON, "Expect ';' after return value.");
+                emit_byte(OP_RETURN);
+        }
+}
+
 static void while_statement(void)
 {
         size_t loop_start = current_chunk()->size;
@@ -788,6 +827,8 @@ static void statement(void)
                 for_statement();
         } else if (match(TOKEN_IF)) {
                 if_statement();
+        } else if (match(TOKEN_RETURN)) {
+                return_statement();
         } else if (match(TOKEN_WHILE)) {
                 while_statement();
         } else if (match(TOKEN_LEFT_BRACE)) {

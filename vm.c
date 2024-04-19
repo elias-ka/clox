@@ -28,10 +28,19 @@ static void runtime_error(const char *format, ...)
         va_end(args);
         fputs("\n", stderr);
 
-        struct call_frame *frame = &vm.frames[vm.frame_count - 1];
-        size_t instruction = frame->ip - frame->fn->chunk.code - 1;
-        int line = frame->fn->chunk.lines[instruction];
-        fprintf(stderr, "[line %d] in script\n", line);
+        for (size_t i = vm.frame_count - 1; i >= 0; i--) {
+                const struct call_frame *frame = &vm.frames[i];
+                const struct obj_function *fn = frame->fn;
+                const size_t instruction = frame->ip - fn->chunk.code - 1;
+                fprintf(stderr, "[line %d] in ", fn->chunk.lines[instruction]);
+
+                if (fn->name) {
+                        fprintf(stderr, "%s()\n", fn->name->chars);
+                } else {
+                        fprintf(stderr, "script\n");
+                }
+        }
+
         reset_stack();
 }
 
@@ -65,6 +74,41 @@ struct value pop(void)
 static struct value peek(int distance)
 {
         return vm.stack_top[-1 - distance];
+}
+
+static bool call(struct obj_function *fn, int n_args)
+{
+        if (n_args != fn->arity) {
+                runtime_error("Expected %d arguments but got %d.", fn->arity,
+                              n_args);
+                return false;
+        }
+
+        if (vm.frame_count == FRAMES_MAX) {
+                runtime_error("Stack overflow.");
+                return false;
+        }
+
+        struct call_frame *frame = &vm.frames[vm.frame_count++];
+        frame->fn = fn;
+        frame->ip = fn->chunk.code;
+        frame->slots = vm.stack_top - n_args - 1;
+        return true;
+}
+
+static bool call_value(struct value callee, int n_args)
+{
+        if (IS_OBJ(callee)) {
+                switch (OBJ_TYPE(callee)) {
+                case OBJ_FUNCTION:
+                        return call(AS_FUNCTION(callee), n_args);
+                default:
+                        // Non-callable object type.
+                        break;
+                }
+        }
+        runtime_error("Can only call functions and classes.");
+        return false;
 }
 
 static bool is_falsey(struct value v)
@@ -255,8 +299,26 @@ static enum interpret_result run(void)
                         frame->ip -= offset;
                         break;
                 }
+                case OP_CALL: {
+                        int n_args = READ_BYTE();
+                        if (!call_value(peek(n_args), n_args)) {
+                                return INTERPRET_RUNTIME_ERROR;
+                        }
+                        frame = &vm.frames[vm.frame_count - 1];
+                        break;
+                }
                 case OP_RETURN: {
-                        return INTERPRET_OK;
+                        struct value result = pop();
+                        vm.frame_count--;
+                        if (vm.frame_count == 0) {
+                                pop();
+                                return INTERPRET_OK;
+                        }
+
+                        vm.stack_top = frame->slots;
+                        push(result);
+                        frame = &vm.frames[vm.frame_count - 1];
+                        break;
                 }
                 default:
                         runtime_error("Unknown opcode %d\n", instruction);
@@ -277,10 +339,7 @@ enum interpret_result vm_interpret(const char *source)
                 return INTERPRET_COMPILE_ERROR;
 
         push(OBJ_VAL(fn));
-        struct call_frame *frame = &vm.frames[vm.frame_count++];
-        frame->fn = fn;
-        frame->ip = fn->chunk.code;
-        frame->slots = vm.stack;
+        call(fn, 0);
 
         return run();
 }
