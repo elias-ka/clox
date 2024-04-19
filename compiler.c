@@ -150,7 +150,7 @@ static void emit_loop(size_t loop_start)
 {
         emit_byte(OP_LOOP);
 
-        size_t offset = current_chunk()->size - loop_start + 2;
+        const size_t offset = current_chunk()->size - loop_start + 2;
         if (offset > UINT16_MAX)
                 error("Loop body too large.");
 
@@ -190,8 +190,8 @@ static void emit_constant(struct value value)
 
 static void patch_jump(size_t offset)
 {
-        struct chunk *cc = current_chunk();
-        size_t jump = cc->size - offset - 2;
+        const struct chunk *cc = current_chunk();
+        const size_t jump = cc->size - offset - 2;
 
         if (jump > UINT16_MAX)
                 error("Too much code to jump over.");
@@ -262,7 +262,8 @@ static void expression(void);
 static void statement(void);
 static void declaration(void);
 static u8 identifier_constant(const struct token *name);
-static s32 resolve_local(struct compiler *compiler, struct token *name);
+static s32 resolve_local(const struct compiler *compiler,
+                         const struct token *name);
 static u8 argument_list(void);
 
 static void binary(bool can_assign)
@@ -270,7 +271,7 @@ static void binary(bool can_assign)
         (void)can_assign;
         const enum token_type operator_type = parser.previous.type;
         const struct parse_rule *rule = get_rule(operator_type);
-        parse_precedence((enum precedence)(rule->precedence + 1));
+        parse_precedence(rule->precedence + 1);
 
         switch (operator_type) {
         case TOKEN_BANG_EQUAL:
@@ -311,7 +312,7 @@ static void binary(bool can_assign)
 static void call(bool can_assign)
 {
         (void)can_assign;
-        u8 n_args = argument_list();
+        const u8 n_args = argument_list();
         emit_bytes(OP_CALL, n_args);
 }
 
@@ -350,8 +351,8 @@ static void number(bool can_assign)
 static void or_(bool can_assign)
 {
         (void)can_assign;
-        size_t else_jump = emit_jump(OP_JUMP_IF_FALSE);
-        size_t end_jump = emit_jump(OP_JUMP);
+        const size_t else_jump = emit_jump(OP_JUMP_IF_FALSE);
+        const size_t end_jump = emit_jump(OP_JUMP);
 
         patch_jump(else_jump);
         emit_byte(OP_POP);
@@ -410,7 +411,7 @@ static void unary(bool can_assign)
                 emit_byte(OP_NEGATE);
                 break;
         default:
-                return;
+                break;
         }
 }
 
@@ -462,18 +463,19 @@ struct parse_rule rules[40] = {
 static void parse_precedence(enum precedence prec)
 {
         advance();
-        parse_fn prefix_rule = get_rule(parser.previous.type)->prefix;
+        const parse_fn prefix_rule = get_rule(parser.previous.type)->prefix;
         if (prefix_rule == NULL) {
                 error("Expect expression.");
                 return;
         }
 
-        bool can_assign = prec <= PREC_ASSIGNMENT;
+        const bool can_assign = prec <= PREC_ASSIGNMENT;
         prefix_rule(can_assign);
 
         while (prec <= get_rule(parser.current.type)->precedence) {
                 advance();
-                parse_fn infix_rule = get_rule(parser.previous.type)->infix;
+                const parse_fn infix_rule =
+                        get_rule(parser.previous.type)->infix;
                 infix_rule(can_assign);
         }
 
@@ -495,10 +497,11 @@ static bool identifiers_equal(const struct token *a, const struct token *b)
         return memcmp(a->start, b->start, a->length) == 0;
 }
 
-static s32 resolve_local(struct compiler *compiler, struct token *name)
+static s32 resolve_local(const struct compiler *compiler,
+                         const struct token *name)
 {
         for (s32 i = compiler->local_count - 1; i >= 0; i--) {
-                struct local *local = &compiler->locals[i];
+                const struct local *local = &compiler->locals[i];
                 if (identifiers_equal(name, &local->name)) {
                         if (local->depth == -1) {
                                 error("Cannot read local variable in its own initializer.");
@@ -591,7 +594,7 @@ static u8 argument_list(void)
 static void and_(bool can_assign)
 {
         (void)can_assign;
-        size_t end_jump = emit_jump(OP_JUMP_IF_FALSE);
+        const size_t end_jump = emit_jump(OP_JUMP_IF_FALSE);
 
         emit_byte(OP_POP);
         parse_precedence(PREC_AND);
@@ -631,7 +634,7 @@ static void function(enum function_type type)
                         if (current->fn->arity > 255) {
                                 error("Cannot have more than 255 parameters.");
                         }
-                        u8 param_constant =
+                        const u8 param_constant =
                                 parse_variable("Expect parameter name.");
                         define_variable(param_constant);
                 } while (match(TOKEN_COMMA));
@@ -647,7 +650,7 @@ static void function(enum function_type type)
 
 static void fun_declaration(void)
 {
-        u8 global = parse_variable("Expect function name.");
+        const u8 global = parse_variable("Expect function name.");
         mark_initialized();
         function(TYPE_FUNCTION);
         define_variable(global);
@@ -655,7 +658,7 @@ static void fun_declaration(void)
 
 static void var_declaration(void)
 {
-        u8 global = parse_variable("Expect variable name.");
+        const u8 global = parse_variable("Expect variable name.");
 
         if (match(TOKEN_EQUAL))
                 expression();
@@ -697,8 +700,8 @@ static void for_statement(void)
         }
 
         if (!match(TOKEN_RIGHT_PAREN)) {
-                size_t body_jump = emit_jump(OP_JUMP);
-                size_t increment_start = current_chunk()->size;
+                const size_t body_jump = emit_jump(OP_JUMP);
+                const size_t increment_start = current_chunk()->size;
                 expression();
                 emit_byte(OP_POP);
                 consume(TOKEN_RIGHT_PAREN, "Expect ')' after for clauses.");
@@ -725,11 +728,11 @@ static void if_statement(void)
         expression();
         consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
 
-        size_t then_jump = emit_jump(OP_JUMP_IF_FALSE);
+        const size_t then_jump = emit_jump(OP_JUMP_IF_FALSE);
         emit_byte(OP_POP);
         statement();
 
-        size_t else_jump = emit_jump(OP_JUMP);
+        const size_t else_jump = emit_jump(OP_JUMP);
 
         patch_jump(then_jump);
         emit_byte(OP_POP);
@@ -763,7 +766,7 @@ static void return_statement(void)
 
 static void while_statement(void)
 {
-        size_t loop_start = current_chunk()->size;
+        const size_t loop_start = current_chunk()->size;
         consume(TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
         expression();
         consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");

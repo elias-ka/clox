@@ -19,7 +19,7 @@ static void repl(void)
 static char *read_file(const char *path)
 {
         FILE *file = fopen(path, "rb");
-        if (!file) {
+        if (file == NULL) {
                 fprintf(stderr, "Could not open file \"%s\".\n", path);
                 exit(74);
         }
@@ -35,7 +35,7 @@ static char *read_file(const char *path)
         }
 
         char *buffer = malloc(file_size + 1);
-        if (!buffer) {
+        if (buffer == NULL) {
                 fprintf(stderr, "Not enough memory to read \"%s\".\n", path);
                 fclose(file);
                 exit(74);
@@ -56,7 +56,7 @@ static char *read_file(const char *path)
 static void run_file(const char *path)
 {
         char *source = read_file(path);
-        enum interpret_result result = vm_interpret(source);
+        const enum interpret_result result = vm_interpret(source);
         free(source);
 
         if (result == INTERPRET_COMPILE_ERROR)

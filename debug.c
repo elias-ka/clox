@@ -41,7 +41,7 @@ static size_t byte_instruction(const char *name, const struct chunk *chunk,
 static size_t jump_instruction(const char *name, s32 sign,
                                const struct chunk *chunk, size_t offset)
 {
-        u16 jump = (u16)(chunk->code[offset + 1] << 8);
+        u16 jump = chunk->code[offset + 1] << 8;
         jump |= chunk->code[offset + 2];
         printf("%-16s %4zu -> %lu\n", name, offset, offset + 3 + sign * jump);
         return offset + 3;

@@ -26,7 +26,7 @@ static void runtime_error(const char *format, ...)
         va_end(args);
         fputs("\n", stderr);
 
-        for (s32 i = vm.frame_count - 1; i >= 0; i--) {
+        for (s32 i = (s32)vm.frame_count - 1; i >= 0; i--) {
                 const struct call_frame *frame = &vm.frames[i];
                 const struct obj_function *fn = frame->fn;
                 const size_t instruction = frame->ip - fn->chunk.code - 1;
@@ -197,7 +197,7 @@ static enum interpret_result run(void)
                         break;
                 }
                 case OP_GET_GLOBAL: {
-                        struct obj_string *name = READ_STRING();
+                        const struct obj_string *name = READ_STRING();
                         struct value value;
                         if (!table_get(&vm.globals, name, &value)) {
                                 runtime_error("Undefined variable '%s'.",
@@ -241,8 +241,8 @@ static enum interpret_result run(void)
                         if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
                                 concatenate();
                         } else if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
-                                double b = AS_NUMBER(pop());
-                                double a = AS_NUMBER(pop());
+                                const double b = AS_NUMBER(pop());
+                                const double a = AS_NUMBER(pop());
                                 push(NUMBER_VAL(a + b));
                         } else {
                                 runtime_error(
@@ -281,24 +281,24 @@ static enum interpret_result run(void)
                         break;
                 }
                 case OP_JUMP: {
-                        u16 offset = READ_SHORT();
+                        const u16 offset = READ_SHORT();
                         frame->ip += offset;
                         break;
                 }
                 case OP_JUMP_IF_FALSE: {
-                        u16 offset = READ_SHORT();
+                        const u16 offset = READ_SHORT();
                         if (is_falsey(peek(0))) {
                                 frame->ip += offset;
                         }
                         break;
                 }
                 case OP_LOOP: {
-                        u16 offset = READ_SHORT();
+                        const u16 offset = READ_SHORT();
                         frame->ip -= offset;
                         break;
                 }
                 case OP_CALL: {
-                        s32 n_args = READ_BYTE();
+                        const s32 n_args = READ_BYTE();
                         if (!call_value(peek(n_args), n_args)) {
                                 return INTERPRET_RUNTIME_ERROR;
                         }
@@ -306,7 +306,7 @@ static enum interpret_result run(void)
                         break;
                 }
                 case OP_RETURN: {
-                        struct value result = pop();
+                        const struct value result = pop();
                         vm.frame_count--;
                         if (vm.frame_count == 0) {
                                 pop();
@@ -333,7 +333,7 @@ static enum interpret_result run(void)
 enum interpret_result vm_interpret(const char *source)
 {
         struct obj_function *fn = compile(source);
-        if (!fn)
+        if (fn == NULL)
                 return INTERPRET_COMPILE_ERROR;
 
         push(OBJ_VAL(fn));

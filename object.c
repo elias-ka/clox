@@ -50,7 +50,7 @@ static u32 hash_string(const char *key, size_t length)
 
 struct obj_string *take_string(char *chars, size_t length)
 {
-        u32 hash = hash_string(chars, length);
+        const u32 hash = hash_string(chars, length);
         struct obj_string *interned =
                 table_find_string(&vm.strings, chars, length, hash);
 
@@ -63,7 +63,7 @@ struct obj_string *take_string(char *chars, size_t length)
 
 struct obj_string *copy_string(const char *chars, size_t length)
 {
-        u32 hash = hash_string(chars, length);
+        const u32 hash = hash_string(chars, length);
         struct obj_string *interned =
                 table_find_string(&vm.strings, chars, length, hash);
 
@@ -76,7 +76,7 @@ struct obj_string *copy_string(const char *chars, size_t length)
         return allocate_string(heap_chars, length, hash);
 }
 
-static void function_print(struct obj_function *fn)
+static void function_print(const struct obj_function *fn)
 {
         if (fn->name == NULL) {
                 printf("<script>");

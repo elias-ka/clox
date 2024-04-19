@@ -7,17 +7,17 @@
 
 #define TABLE_MAX_LOAD 0.75
 
-void table_init(struct table *table)
+void table_init(struct table *t)
 {
-        table->len = 0;
-        table->capacity = 0;
-        table->entries = NULL;
+        t->len = 0;
+        t->capacity = 0;
+        t->entries = NULL;
 }
 
-void table_free(struct table *table)
+void table_free(struct table *t)
 {
-        FREE_ARRAY(struct entry, table->entries, table->capacity);
-        table_init(table);
+        FREE_ARRAY(struct entry, t->entries, t->capacity);
+        table_init(t);
 }
 
 static struct entry *find_entry(struct entry *entries, size_t capacity,
@@ -32,7 +32,8 @@ static struct entry *find_entry(struct entry *entries, size_t capacity,
                         if (IS_NIL(entry->value)) {
                                 // bucket is empty
                                 return tombstone ? tombstone : entry;
-                        } else if (!tombstone) {
+                        }
+                        if (tombstone == NULL) {
                                 // bucket had a tombstone
                                 tombstone = entry;
                         }
@@ -56,7 +57,7 @@ static void adjust_capacity(struct table *table, size_t capacity)
 
         table->len = 0;
         for (size_t i = 0; i < table->capacity; i++) {
-                struct entry *entry = &table->entries[i];
+                const struct entry *entry = &table->entries[i];
                 if (entry->key == NULL)
                         continue;
 
@@ -80,7 +81,7 @@ bool table_set(struct table *table, struct obj_string *key, struct value value)
         }
 
         struct entry *entry = find_entry(table->entries, table->capacity, key);
-        bool is_new_key = entry->key == NULL;
+        const bool is_new_key = entry->key == NULL;
 
         if (is_new_key && IS_NIL(entry->value))
                 table->len++;
@@ -90,7 +91,7 @@ bool table_set(struct table *table, struct obj_string *key, struct value value)
         return is_new_key;
 }
 
-bool table_get(struct table *table, const struct obj_string *key,
+bool table_get(const struct table *table, const struct obj_string *key,
                struct value *value)
 {
         if (table->len == 0)
@@ -105,7 +106,7 @@ bool table_get(struct table *table, const struct obj_string *key,
         return true;
 }
 
-bool table_delete(struct table *table, const struct obj_string *key)
+bool table_delete(const struct table *table, const struct obj_string *key)
 {
         if (table->len == 0)
                 return false;
@@ -121,24 +122,24 @@ bool table_delete(struct table *table, const struct obj_string *key)
         return true;
 }
 
-void table_add_all(struct table *source, struct table *dest)
+void table_add_all(const struct table *source, struct table *dest)
 {
         for (size_t i = 0; i < source->capacity; i++) {
-                struct entry *entry = &source->entries[i];
+                const struct entry *entry = &source->entries[i];
                 if (entry->key != NULL)
                         table_set(dest, entry->key, entry->value);
         }
 }
 
-struct obj_string *table_find_string(struct table *table, const char *chars,
-                                     size_t length, u32 hash)
+struct obj_string *table_find_string(const struct table *table,
+                                     const char *chars, size_t length, u32 hash)
 {
         if (table->len == 0)
                 return NULL;
 
         size_t index = hash % table->capacity;
         for (;;) {
-                struct entry *entry = &table->entries[index];
+                const struct entry *entry = &table->entries[index];
 
                 if (entry->key == NULL) {
                         // stop if we find an empty non-tombstone entry

@@ -87,7 +87,7 @@ static struct token error_token(const char *message)
 static void skip_whitespace(void)
 {
         for (;;) {
-                char c = peek();
+                const char c = peek();
                 switch (c) {
                 case ' ':
                 case '\r':
@@ -136,7 +136,7 @@ static enum token_type identifier_type(void)
         case 'e':
                 return check_keyword(1, 3, "lse", TOKEN_ELSE);
         case 'f':
-                if ((scanner.current - scanner.start) > 1) {
+                if (scanner.current - scanner.start > 1) {
                         switch (scanner.start[1]) {
                         case 'a':
                                 return check_keyword(2, 3, "lse", TOKEN_FALSE);
@@ -144,6 +144,8 @@ static enum token_type identifier_type(void)
                                 return check_keyword(2, 1, "r", TOKEN_FOR);
                         case 'u':
                                 return check_keyword(2, 1, "n", TOKEN_FUN);
+                        default:
+                                break;
                         }
                 }
                 break;
@@ -160,12 +162,14 @@ static enum token_type identifier_type(void)
         case 's':
                 return check_keyword(1, 4, "uper", TOKEN_SUPER);
         case 't':
-                if ((scanner.current - scanner.start) > 1) {
+                if (scanner.current - scanner.start > 1) {
                         switch (scanner.start[1]) {
                         case 'h':
                                 return check_keyword(2, 2, "is", TOKEN_THIS);
                         case 'r':
                                 return check_keyword(2, 2, "ue", TOKEN_TRUE);
+                        default:
+                                break;
                         }
                 }
                 break;
@@ -228,7 +232,7 @@ struct token scan_token(void)
         if (is_at_end())
                 return make_token(TOKEN_EOF);
 
-        char c = advance();
+        const char c = advance();
         if (is_alpha(c))
                 return identifier();
 
