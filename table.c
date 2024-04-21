@@ -74,8 +74,7 @@ static void adjust_capacity(struct table *table, size_t capacity)
 
 bool table_set(struct table *table, struct obj_string *key, struct value value)
 {
-        if (((double)(table->len + 1)) >
-            ((double)table->capacity * TABLE_MAX_LOAD)) {
+        if (((f64)(table->len + 1)) > ((f64)table->capacity * TABLE_MAX_LOAD)) {
                 const size_t capacity = GROW_CAPACITY(table->capacity);
                 adjust_capacity(table, capacity);
         }

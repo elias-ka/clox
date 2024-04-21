@@ -12,14 +12,14 @@ void chunk_init(struct chunk *chunk)
         value_array_init(&chunk->constants);
 }
 
-void chunk_write(struct chunk *chunk, u8 byte, s32 line)
+void chunk_write(struct chunk *chunk, u8 byte, size_t line)
 {
         if (chunk->capacity < (chunk->size + 1)) {
                 const size_t old_capacity = chunk->capacity;
                 chunk->capacity = GROW_CAPACITY(old_capacity);
                 chunk->code = GROW_ARRAY(u8, chunk->code, old_capacity,
                                          chunk->capacity);
-                chunk->lines = GROW_ARRAY(int, chunk->lines, old_capacity,
+                chunk->lines = GROW_ARRAY(size_t, chunk->lines, old_capacity,
                                           chunk->capacity);
         }
         chunk->code[chunk->size] = byte;

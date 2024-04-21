@@ -25,7 +25,7 @@ static char *read_file(const char *path)
         }
 
         fseek(file, 0L, SEEK_END);
-        const s64 file_size = ftell(file);
+        const i64 file_size = ftell(file);
         rewind(file);
 
         if (file_size <= 0) {
@@ -34,15 +34,16 @@ static char *read_file(const char *path)
                 exit(74);
         }
 
-        char *buffer = malloc(file_size + 1);
+        char *buffer = malloc((size_t)file_size + 1);
         if (buffer == NULL) {
                 fprintf(stderr, "Not enough memory to read \"%s\".\n", path);
                 fclose(file);
                 exit(74);
         }
 
-        const s64 bytes_read = fread(buffer, sizeof(char), file_size, file);
-        if (bytes_read < file_size) {
+        const u64 bytes_read =
+                fread(buffer, sizeof(char), (size_t)file_size, file);
+        if (bytes_read < (u32)file_size) {
                 fprintf(stderr, "Could not read file \"%s\".\n", path);
                 fclose(file);
                 exit(74);
@@ -65,7 +66,7 @@ static void run_file(const char *path)
                 exit(70);
 }
 
-s32 main(s32 argc, char *argv[])
+i32 main(i32 argc, char *argv[])
 {
         vm_init();
         if (argc == 1) {

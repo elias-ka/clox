@@ -18,7 +18,8 @@ static void reset_stack(void)
         vm.frame_count = 0;
 }
 
-static void runtime_error(const char *format, ...)
+__attribute__((__format__(__printf__, 1, 0))) static void
+runtime_error(const char *format, ...)
 {
         va_list args;
         va_start(args, format);
@@ -26,11 +27,12 @@ static void runtime_error(const char *format, ...)
         va_end(args);
         fputs("\n", stderr);
 
-        for (s32 i = (s32)vm.frame_count - 1; i >= 0; i--) {
+        for (i32 i = (i32)vm.frame_count - 1; i >= 0; i--) {
                 const struct call_frame *frame = &vm.frames[i];
                 const struct obj_function *fn = frame->fn;
-                const size_t instruction = frame->ip - fn->chunk.code - 1;
-                fprintf(stderr, "[line %d] in ", fn->chunk.lines[instruction]);
+                const size_t instruction =
+                        (size_t)(frame->ip - fn->chunk.code - 1);
+                fprintf(stderr, "[line %zu] in ", fn->chunk.lines[instruction]);
 
                 if (fn->name) {
                         fprintf(stderr, "%s()\n", fn->name->chars);
@@ -69,12 +71,12 @@ struct value pop(void)
         return *vm.stack_top;
 }
 
-static struct value peek(s32 distance)
+static struct value peek(i32 distance)
 {
         return vm.stack_top[-1 - distance];
 }
 
-static bool call(struct obj_function *fn, s32 n_args)
+static bool call(struct obj_function *fn, i32 n_args)
 {
         if (n_args != fn->arity) {
                 runtime_error("Expected %d arguments but got %d.", fn->arity,
@@ -94,7 +96,7 @@ static bool call(struct obj_function *fn, s32 n_args)
         return true;
 }
 
-static bool call_value(struct value callee, s32 n_args)
+static bool call_value(struct value callee, i32 n_args)
 {
         if (IS_OBJ(callee)) {
                 switch (OBJ_TYPE(callee)) {
@@ -144,8 +146,8 @@ static enum interpret_result run(void)
                         runtime_error("Operands must be numbers."); \
                         return INTERPRET_RUNTIME_ERROR;             \
                 }                                                   \
-                double b = AS_NUMBER(pop());                        \
-                double a = AS_NUMBER(pop());                        \
+                f64 b = AS_NUMBER(pop());                           \
+                f64 a = AS_NUMBER(pop());                           \
                 push(value_type(a op b));                           \
         } while (false)
 
@@ -161,7 +163,7 @@ static enum interpret_result run(void)
                 printf("\n");
                 disassemble_instruction(
                         &frame->fn->chunk,
-                        (int)(frame->ip - frame->fn->chunk.code));
+                        (size_t)(frame->ip - frame->fn->chunk.code));
 #endif
                 const u8 instruction = READ_BYTE();
                 switch (instruction) {
@@ -241,8 +243,8 @@ static enum interpret_result run(void)
                         if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
                                 concatenate();
                         } else if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
-                                const double b = AS_NUMBER(pop());
-                                const double a = AS_NUMBER(pop());
+                                const f64 b = AS_NUMBER(pop());
+                                const f64 a = AS_NUMBER(pop());
                                 push(NUMBER_VAL(a + b));
                         } else {
                                 runtime_error(
@@ -298,7 +300,7 @@ static enum interpret_result run(void)
                         break;
                 }
                 case OP_CALL: {
-                        const s32 n_args = READ_BYTE();
+                        const i32 n_args = READ_BYTE();
                         if (!call_value(peek(n_args), n_args)) {
                                 return INTERPRET_RUNTIME_ERROR;
                         }

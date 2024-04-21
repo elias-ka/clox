@@ -38,12 +38,13 @@ static size_t byte_instruction(const char *name, const struct chunk *chunk,
         return offset + 2;
 }
 
-static size_t jump_instruction(const char *name, s32 sign,
+static size_t jump_instruction(const char *name, i32 sign,
                                const struct chunk *chunk, size_t offset)
 {
-        u16 jump = chunk->code[offset + 1] << 8;
+        u16 jump = (u16)(chunk->code[offset + 1] << 8);
         jump |= chunk->code[offset + 2];
-        printf("%-16s %4zu -> %lu\n", name, offset, offset + 3 + sign * jump);
+        printf("%-16s %4zu -> %lu\n", name, offset,
+               offset + 3 + (size_t)sign * jump);
         return offset + 3;
 }
 
@@ -54,7 +55,7 @@ size_t disassemble_instruction(const struct chunk *chunk, size_t offset)
             (chunk->lines[offset] == chunk->lines[offset - 1])) {
                 printf("   | ");
         } else {
-                printf("%4d ", chunk->lines[offset]);
+                printf("%4zu ", chunk->lines[offset]);
         }
 
         const u8 instruction = chunk->code[offset];

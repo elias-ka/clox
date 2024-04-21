@@ -54,8 +54,8 @@ enum token_type {
 struct token {
         enum token_type type;
         const char *start;
-        s32 length;
-        s32 line;
+        size_t length;
+        size_t line;
 };
 
 void scanner_init(const char *source);

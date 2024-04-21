@@ -38,12 +38,12 @@ struct chunk {
         u8 *code;
         // TODO: Storing the line number for each instruction is not really necessary
         //       and wastes some memory.
-        s32 *lines;
+        size_t *lines;
         struct value_array constants;
 };
 
 void chunk_init(struct chunk *chunk);
-void chunk_write(struct chunk *chunk, u8 byte, s32 line);
+void chunk_write(struct chunk *chunk, u8 byte, size_t line);
 void chunk_free(struct chunk *chunk);
 
 /**

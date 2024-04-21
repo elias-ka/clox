@@ -26,7 +26,7 @@ struct obj {
 
 struct obj_function {
         struct obj obj;
-        s32 arity;
+        i32 arity;
         struct chunk chunk;
         struct obj_string *name;
 };

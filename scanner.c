@@ -5,7 +5,7 @@
 struct scanner {
         const char *start;
         const char *current;
-        s32 line;
+        size_t line;
 };
 
 static struct scanner scanner;
@@ -69,7 +69,7 @@ static struct token make_token(enum token_type type)
         return (struct token){
                 .type = type,
                 .start = scanner.start,
-                .length = (s32)(scanner.current - scanner.start),
+                .length = (size_t)(scanner.current - scanner.start),
                 .line = scanner.line,
         };
 }
@@ -79,7 +79,7 @@ static struct token error_token(const char *message)
         return (struct token){
                 .type = TOKEN_ERROR,
                 .start = message,
-                .length = (s32)strlen(message),
+                .length = strlen(message),
                 .line = scanner.line,
         };
 }
@@ -112,11 +112,12 @@ static void skip_whitespace(void)
         }
 }
 
-static enum token_type check_keyword(s32 start, s32 length, const char *rest,
-                                     enum token_type type)
+static enum token_type check_keyword(size_t start, size_t length,
+                                     const char *rest, enum token_type type)
 {
         const bool is_keyword =
-                ((scanner.current - scanner.start) == (start + length)) &&
+                ((size_t)(scanner.current - scanner.start) ==
+                 (start + length)) &&
                 (memcmp(scanner.start + start, rest, length) == 0);
 
         if (is_keyword) {

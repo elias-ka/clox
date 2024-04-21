@@ -46,7 +46,7 @@ struct parse_rule {
 
 struct local {
         struct token name;
-        s32 depth;
+        i32 depth;
 };
 
 enum function_type { TYPE_FUNCTION, TYPE_SCRIPT };
@@ -57,8 +57,8 @@ struct compiler {
         enum function_type fn_type;
 
         struct local locals[UINT8_COUNT];
-        s32 local_count;
-        s32 scope_depth;
+        i32 local_count;
+        i32 scope_depth;
 };
 
 struct compiler *current = NULL;
@@ -74,14 +74,14 @@ static void error_at(const struct token *tok, const char *message)
                 return;
 
         parser.panic_mode = true;
-        fprintf(stderr, "[line %d] Error", tok->line);
+        fprintf(stderr, "[line %zu] Error", tok->line);
 
         if (tok->type == TOKEN_EOF) {
                 fprintf(stderr, " at end");
         } else if (tok->type == TOKEN_ERROR) {
                 // Nothing.
         } else {
-                fprintf(stderr, " at '%.*s'", tok->length, tok->start);
+                fprintf(stderr, " at '%.*s'", (i32)tok->length, tok->start);
         }
 
         fprintf(stderr, ": %s\n", message);
@@ -262,7 +262,7 @@ static void expression(void);
 static void statement(void);
 static void declaration(void);
 static u8 identifier_constant(const struct token *name);
-static s32 resolve_local(const struct compiler *compiler,
+static i32 resolve_local(const struct compiler *compiler,
                          const struct token *name);
 static u8 argument_list(void);
 
@@ -344,7 +344,7 @@ static void grouping(bool can_assign)
 static void number(bool can_assign)
 {
         (void)can_assign;
-        const double value = strtod(parser.previous.start, NULL);
+        const f64 value = strtod(parser.previous.start, NULL);
         emit_constant(NUMBER_VAL(value));
 }
 
@@ -372,7 +372,7 @@ static void named_variable(struct token name, bool can_assign)
 {
         u8 get_op;
         u8 set_op;
-        s32 arg = resolve_local(current, &name);
+        i32 arg = resolve_local(current, &name);
 
         if (arg != -1) {
                 get_op = OP_GET_LOCAL;
@@ -497,10 +497,10 @@ static bool identifiers_equal(const struct token *a, const struct token *b)
         return memcmp(a->start, b->start, a->length) == 0;
 }
 
-static s32 resolve_local(const struct compiler *compiler,
+static i32 resolve_local(const struct compiler *compiler,
                          const struct token *name)
 {
-        for (s32 i = compiler->local_count - 1; i >= 0; i--) {
+        for (i32 i = compiler->local_count - 1; i >= 0; i--) {
                 const struct local *local = &compiler->locals[i];
                 if (identifiers_equal(name, &local->name)) {
                         if (local->depth == -1) {
@@ -531,7 +531,7 @@ static void declare_variable(void)
                 return;
 
         const struct token *name = &parser.previous;
-        for (s32 i = current->local_count - 1; i >= 0; i--) {
+        for (i32 i = current->local_count - 1; i >= 0; i--) {
                 const struct local *local = &current->locals[i];
                 if (local->depth != -1 && local->depth < current->scope_depth)
                         break;

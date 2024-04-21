@@ -12,7 +12,7 @@ struct value {
         enum value_type type;
         union {
                 bool boolean;
-                double number;
+                f64 number;
                 struct obj *obj;
         } as;
 };
