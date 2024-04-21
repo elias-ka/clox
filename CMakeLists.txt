@@ -36,7 +36,7 @@ set_target_properties(clox PROPERTIES
 
 target_compile_options(clox PRIVATE
         "$<$<CONFIG:DEBUG>:"
-        "-Og;-g;-Wall;-Wextra;-Werror;-Wformat;-Wformat=2;-ggdb3;"
+        "-Og;-gdwarf-4;-Wall;-Wextra;-Werror;-Wformat;-Wformat=2;-ggdb3;"
         "-Werror=implicit;-Werror=incompatible-pointer-types;-Werror=int-conversion;"
         "-Wconversion;-Wsign-conversion;-Wimplicit-fallthrough;"
         "-U_FORTIFY_SOURCE;-D_FORTIFY_SOURCE=2;"
