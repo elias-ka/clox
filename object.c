@@ -32,6 +32,7 @@ struct obj_function *new_function()
         struct obj_function *fn =
                 ALLOCATE_OBJ(struct obj_function, OBJ_FUNCTION);
         fn->arity = 0;
+        fn->upvalue_count = 0;
         fn->name = NULL;
         chunk_init(&fn->chunk);
         return fn;

@@ -33,6 +33,7 @@ struct obj {
 struct obj_function {
         struct obj obj;
         i32 arity;
+        i32 upvalue_count;
         struct chunk chunk;
         struct obj_string *name;
 };

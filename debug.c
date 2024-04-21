@@ -2,6 +2,7 @@
 
 #include "chunk.h"
 #include "common.h"
+#include "object.h"
 #include "value.h"
 
 void disassemble_chunk(const struct chunk *chunk, const char *name)
@@ -80,6 +81,10 @@ size_t disassemble_instruction(const struct chunk *chunk, size_t offset)
                 return constant_instruction("OP_DEFINE_GLOBAL", chunk, offset);
         case OP_SET_GLOBAL:
                 return constant_instruction("OP_SET_GLOBAL", chunk, offset);
+        case OP_GET_UPVALUE:
+                return byte_instruction("OP_GET_UPVALUE", chunk, offset);
+        case OP_SET_UPVALUE:
+                return byte_instruction("OP_SET_UPVALUE", chunk, offset);
         case OP_EQUAL:
                 return simple_instruction("OP_EQUAL", offset);
         case OP_GREATER:
@@ -114,6 +119,17 @@ size_t disassemble_instruction(const struct chunk *chunk, size_t offset)
                 printf("%-16s %4d ", "OP_CLOSURE", constant);
                 value_print(chunk->constants.values[constant]);
                 printf("\n");
+
+                const struct obj_function *fn =
+                        AS_FUNCTION(chunk->constants.values[constant]);
+
+                for (i32 i = 0; i < fn->upvalue_count; i++) {
+                        const u8 is_local = chunk->code[offset++];
+                        const u8 index = chunk->code[offset++];
+                        printf("%04lu      |                     %s %d\n",
+                               offset - 2, is_local ? "local" : "upvalue",
+                               index);
+                }
                 return offset;
         }
         case OP_RETURN:

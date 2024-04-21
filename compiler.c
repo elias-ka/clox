@@ -49,6 +49,11 @@ struct local {
         i32 depth;
 };
 
+struct upvalue {
+        u8 index;
+        bool is_local;
+};
+
 enum function_type { TYPE_FUNCTION, TYPE_SCRIPT };
 
 struct compiler {
@@ -58,6 +63,7 @@ struct compiler {
 
         struct local locals[UINT8_COUNT];
         i32 local_count;
+        struct upvalue upvalues[UINT8_COUNT];
         i32 scope_depth;
 };
 
@@ -368,6 +374,8 @@ static void string(bool can_assign)
                                           parser.previous.length - 2)));
 }
 
+static i32 resolve_upvalue(struct compiler *compiler, struct token *name);
+
 static void named_variable(struct token name, bool can_assign)
 {
         u8 get_op;
@@ -377,6 +385,9 @@ static void named_variable(struct token name, bool can_assign)
         if (arg != -1) {
                 get_op = OP_GET_LOCAL;
                 set_op = OP_SET_LOCAL;
+        } else if ((arg = resolve_upvalue(current, &name)) != -1) {
+                get_op = OP_GET_UPVALUE;
+                set_op = OP_SET_UPVALUE;
         } else {
                 arg = identifier_constant(&name);
                 get_op = OP_GET_GLOBAL;
@@ -508,6 +519,48 @@ static i32 resolve_local(const struct compiler *compiler,
                         }
                         return i;
                 }
+        }
+
+        return -1;
+}
+
+static i32 add_upvalue(struct compiler *compiler, u8 index, bool is_local)
+{
+        const i32 upvalue_count = compiler->fn->upvalue_count;
+
+        for (i32 i = 0; i < upvalue_count; i++) {
+                struct upvalue *upvalue = &compiler->upvalues[i];
+                if (upvalue->index == index && upvalue->is_local == is_local) {
+                        return i;
+                }
+        }
+
+        if (upvalue_count == UINT8_COUNT) {
+                error("Too many closure variables in function.");
+                return 0;
+        }
+
+        compiler->upvalues[upvalue_count].is_local = is_local;
+        compiler->upvalues[upvalue_count].index = index;
+        return compiler->fn->upvalue_count++;
+}
+
+static i32 resolve_upvalue(struct compiler *compiler, struct token *name)
+{
+        if (compiler->enclosing == NULL)
+                return -1;
+
+        // Look for a matching local variable in the enclosing function.
+        i32 local = resolve_local(compiler->enclosing, name);
+        if (local != -1) {
+                return add_upvalue(compiler, (u8)local, true);
+        }
+
+        // The local variable wasn't found in the immediate enclosing function.
+        // It must be an upvalue, recursively search through the enclosing functions.
+        i32 upvalue = resolve_upvalue(compiler->enclosing, name);
+        if (upvalue != -1) {
+                return add_upvalue(current, (u8)upvalue, false);
         }
 
         return -1;
@@ -646,6 +699,11 @@ static void function(enum function_type type)
 
         struct obj_function *fn = end_compiler();
         emit_bytes(OP_CLOSURE, make_constant(OBJ_VAL(fn)));
+
+        for (i32 i = 0; i < fn->upvalue_count; i++) {
+                emit_byte(compiler.upvalues[i].is_local ? 1 : 0);
+                emit_byte(compiler.upvalues[i].index);
+        }
 }
 
 static void fun_declaration(void)
