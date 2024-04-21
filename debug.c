@@ -44,7 +44,7 @@ static size_t jump_instruction(const char *name, i32 sign,
 {
         u16 jump = (u16)(chunk->code[offset + 1] << 8);
         jump |= chunk->code[offset + 2];
-        printf("%-16s %4zu -> %lu\n", name, offset,
+        printf("%-16s %4zu -> %zu\n", name, offset,
                offset + 3 + (size_t)sign * jump);
         return offset + 3;
 }
@@ -126,7 +126,7 @@ size_t disassemble_instruction(const struct chunk *chunk, size_t offset)
                 for (i32 i = 0; i < fn->upvalue_count; i++) {
                         const u8 is_local = chunk->code[offset++];
                         const u8 index = chunk->code[offset++];
-                        printf("%04lu      |                     %s %d\n",
+                        printf("%04zu      |                     %s %d\n",
                                offset - 2, is_local ? "local" : "upvalue",
                                index);
                 }
