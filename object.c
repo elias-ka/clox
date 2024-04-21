@@ -19,6 +19,14 @@ static struct obj *allocate_object(size_t size, enum obj_type type)
         return object;
 }
 
+struct obj_closure *new_closure(struct obj_function *fn)
+{
+        struct obj_closure *closure =
+                ALLOCATE_OBJ(struct obj_closure, OBJ_CLOSURE);
+        closure->fn = fn;
+        return closure;
+}
+
 struct obj_function *new_function()
 {
         struct obj_function *fn =
@@ -104,6 +112,9 @@ void object_print(struct value value)
                 break;
         case OBJ_NATIVE:
                 printf("<native fn>");
+                break;
+        case OBJ_CLOSURE:
+                function_print(AS_CLOSURE(value)->fn);
                 break;
         }
 }

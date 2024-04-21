@@ -39,7 +39,7 @@ runtime_error(const char *format, ...)
 
         for (i32 i = (i32)vm.frame_count - 1; i >= 0; i--) {
                 const struct call_frame *frame = &vm.frames[i];
-                const struct obj_function *fn = frame->fn;
+                const struct obj_function *fn = frame->closure->fn;
                 const size_t instruction =
                         (size_t)(frame->ip - fn->chunk.code - 1);
                 fprintf(stderr, "[line %zu] in ", fn->chunk.lines[instruction]);
@@ -100,11 +100,11 @@ static struct value peek(i32 distance)
         return vm.stack_top[-1 - distance];
 }
 
-static bool call(struct obj_function *fn, i32 n_args)
+static bool call(struct obj_closure *closure, i32 n_args)
 {
-        if (n_args != fn->arity) {
-                runtime_error("Expected %d arguments but got %d.", fn->arity,
-                              n_args);
+        if (n_args != closure->fn->arity) {
+                runtime_error("Expected %d arguments but got %d.",
+                              closure->fn->arity, n_args);
                 return false;
         }
 
@@ -114,8 +114,8 @@ static bool call(struct obj_function *fn, i32 n_args)
         }
 
         struct call_frame *frame = &vm.frames[vm.frame_count++];
-        frame->fn = fn;
-        frame->ip = fn->chunk.code;
+        frame->closure = closure;
+        frame->ip = closure->fn->chunk.code;
         frame->slots = vm.stack_top - n_args - 1;
         return true;
 }
@@ -124,8 +124,8 @@ static bool call_value(struct value callee, i32 n_args)
 {
         if (IS_OBJ(callee)) {
                 switch (OBJ_TYPE(callee)) {
-                case OBJ_FUNCTION:
-                        return call(AS_FUNCTION(callee), n_args);
+                case OBJ_CLOSURE:
+                        return call(AS_CLOSURE(callee), n_args);
                 case OBJ_NATIVE: {
                         native_fn fn = AS_NATIVE(callee);
                         struct value result = fn(n_args, vm.stack_top - n_args);
@@ -167,7 +167,8 @@ static enum interpret_result run(void)
         struct call_frame *frame = &vm.frames[vm.frame_count - 1];
 
 #define READ_BYTE() (*frame->ip++)
-#define READ_CONSTANT() (frame->fn->chunk.constants.values[READ_BYTE()])
+#define READ_CONSTANT() \
+        (frame->closure->fn->chunk.constants.values[READ_BYTE()])
 #define READ_SHORT() \
         (frame->ip += 2, (u16)((frame->ip[-2] << 8) | frame->ip[-1]))
 #define READ_STRING() AS_STRING(READ_CONSTANT())
@@ -193,8 +194,8 @@ static enum interpret_result run(void)
                 }
                 printf("\n");
                 disassemble_instruction(
-                        &frame->fn->chunk,
-                        (size_t)(frame->ip - frame->fn->chunk.code));
+                        &frame->closure->fn->chunk,
+                        (size_t)(frame->ip - frame->closure->fn->chunk.code));
 #endif
                 const u8 instruction = READ_BYTE();
                 switch (instruction) {
@@ -338,6 +339,12 @@ static enum interpret_result run(void)
                         frame = &vm.frames[vm.frame_count - 1];
                         break;
                 }
+                case OP_CLOSURE: {
+                        struct obj_function *fn = AS_FUNCTION(READ_CONSTANT());
+                        const struct obj_closure *closure = new_closure(fn);
+                        push(OBJ_VAL(closure));
+                        break;
+                }
                 case OP_RETURN: {
                         const struct value result = pop();
                         vm.frame_count--;
@@ -370,7 +377,11 @@ enum interpret_result vm_interpret(const char *source)
                 return INTERPRET_COMPILE_ERROR;
 
         push(OBJ_VAL(fn));
-        call(fn, 0);
+
+        struct obj_closure *closure = new_closure(fn);
+        pop();
+        push(OBJ_VAL(closure));
+        call(closure, 0);
 
         return run();
 }

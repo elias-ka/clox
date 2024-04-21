@@ -645,7 +645,7 @@ static void function(enum function_type type)
         block();
 
         struct obj_function *fn = end_compiler();
-        emit_bytes(OP_CONSTANT, make_constant(OBJ_VAL(fn)));
+        emit_bytes(OP_CLOSURE, make_constant(OBJ_VAL(fn)));
 }
 
 static void fun_declaration(void)

@@ -40,6 +40,10 @@ void free_object(struct obj *object)
                 FREE(struct obj_native, object);
                 break;
         }
+        case OBJ_CLOSURE: {
+                FREE(struct obj_closure, object);
+                break;
+        }
         }
 }
 
