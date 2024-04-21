@@ -3,14 +3,24 @@
 #include "chunk.h"
 #include "common.h"
 #include "compiler.h"
+#include "table.h"
+#include "value.h"
 #ifdef DEBUG_TRACE_EXECUTION
 #include "debug.h"
 #endif
 #include "memutil.h"
 #include "object.h"
 #include <string.h>
+#include <time.h>
 
 struct vm vm;
+
+static struct value clock_native(i32 n_args, struct value *args)
+{
+        (void)n_args;
+        (void)args;
+        return NUMBER_VAL((f64)clock() / CLOCKS_PER_SEC);
+}
 
 static void reset_stack(void)
 {
@@ -44,12 +54,26 @@ runtime_error(const char *format, ...)
         reset_stack();
 }
 
+void push(struct value v);
+struct value pop(void);
+
+static void define_native(const char *name, native_fn fn)
+{
+        push(OBJ_VAL(copy_string(name, strlen(name))));
+        push(OBJ_VAL(new_native(fn)));
+        table_set(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
+        pop();
+        pop();
+}
+
 void vm_init(void)
 {
         reset_stack();
         vm.objects = NULL;
         table_init(&vm.globals);
         table_init(&vm.strings);
+
+        define_native("clock", clock_native);
 }
 
 void vm_free(void)
@@ -102,6 +126,13 @@ static bool call_value(struct value callee, i32 n_args)
                 switch (OBJ_TYPE(callee)) {
                 case OBJ_FUNCTION:
                         return call(AS_FUNCTION(callee), n_args);
+                case OBJ_NATIVE: {
+                        native_fn fn = AS_NATIVE(callee);
+                        struct value result = fn(n_args, vm.stack_top - n_args);
+                        vm.stack_top -= n_args + 1;
+                        push(result);
+                        return true;
+                }
                 default:
                         // Non-callable object type.
                         break;

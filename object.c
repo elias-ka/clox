@@ -4,6 +4,7 @@
 #include "table.h"
 #include "value.h"
 #include "vm.h"
+#include <stdio.h>
 #include <string.h>
 
 #define ALLOCATE_OBJ(type, obj_type) \
@@ -26,6 +27,13 @@ struct obj_function *new_function()
         fn->name = NULL;
         chunk_init(&fn->chunk);
         return fn;
+}
+
+struct obj_native *new_native(native_fn fn)
+{
+        struct obj_native *native = ALLOCATE_OBJ(struct obj_native, OBJ_NATIVE);
+        native->fn = fn;
+        return native;
 }
 
 static struct obj_string *allocate_string(char *chars, size_t length, u32 hash)
@@ -93,6 +101,9 @@ void object_print(struct value value)
                 break;
         case OBJ_FUNCTION:
                 function_print(AS_FUNCTION(value));
+                break;
+        case OBJ_NATIVE:
+                printf("<native fn>");
                 break;
         }
 }

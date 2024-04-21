@@ -36,6 +36,10 @@ void free_object(struct obj *object)
                 FREE(struct obj_function, object);
                 break;
         }
+        case OBJ_NATIVE: {
+                FREE(struct obj_native, object);
+                break;
+        }
         }
 }
 
