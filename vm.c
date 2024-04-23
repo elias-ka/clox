@@ -142,6 +142,12 @@ static bool call_value(struct value callee, i32 n_args)
         return false;
 }
 
+static struct obj_upvalue *capture_upvalue(struct value *local)
+{
+        struct obj_upvalue *created_upvalue = new_upvalue(local);
+        return created_upvalue;
+}
+
 static bool is_falsey(struct value v)
 {
         return IS_NIL(v) || (IS_BOOL(v) && (!AS_BOOL(v)));
@@ -257,6 +263,16 @@ static enum interpret_result run(void)
                         }
                         break;
                 }
+                case OP_GET_UPVALUE: {
+                        const u8 slot = READ_BYTE();
+                        push(*frame->closure->upvalues[slot]->location);
+                        break;
+                }
+                case OP_SET_UPVALUE: {
+                        const u8 slot = READ_BYTE();
+                        *frame->closure->upvalues[slot]->location = peek(0);
+                        break;
+                }
                 case OP_EQUAL: {
                         const struct value b = pop();
                         const struct value a = pop();
@@ -343,6 +359,17 @@ static enum interpret_result run(void)
                         struct obj_function *fn = AS_FUNCTION(READ_CONSTANT());
                         const struct obj_closure *closure = new_closure(fn);
                         push(OBJ_VAL(closure));
+                        for (i32 i = 0; i < closure->upvalue_count; i++) {
+                                const u8 is_local = READ_BYTE();
+                                const u8 index = READ_BYTE();
+                                if (is_local) {
+                                        closure->upvalues[i] = capture_upvalue(
+                                                frame->slots + index);
+                                } else {
+                                        closure->upvalues[i] =
+                                                frame->closure->upvalues[index];
+                                }
+                        }
                         break;
                 }
                 case OP_RETURN: {

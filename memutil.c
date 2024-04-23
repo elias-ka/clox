@@ -41,9 +41,15 @@ void free_object(struct obj *object)
                 break;
         }
         case OBJ_CLOSURE: {
+                struct obj_closure *closure = (struct obj_closure *)object;
+                FREE_ARRAY(struct obj_upvalue *, closure->upvalues,
+                           (u64)closure->upvalue_count);
                 FREE(struct obj_closure, object);
                 break;
         }
+        case OBJ_UPVALUE:
+                FREE(struct obj_upvalue, object);
+                break;
         }
 }
 

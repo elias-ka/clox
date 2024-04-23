@@ -21,9 +21,19 @@ static struct obj *allocate_object(size_t size, enum obj_type type)
 
 struct obj_closure *new_closure(struct obj_function *fn)
 {
+        struct obj_upvalue **upvalues =
+                ALLOCATE(struct obj_upvalue *, (u64)fn->upvalue_count);
+
+        for (i32 i = 0; i < fn->upvalue_count; i++) {
+                upvalues[i] = NULL;
+        }
+
         struct obj_closure *closure =
                 ALLOCATE_OBJ(struct obj_closure, OBJ_CLOSURE);
+
         closure->fn = fn;
+        closure->upvalues = upvalues;
+        closure->upvalue_count = fn->upvalue_count;
         return closure;
 }
 
@@ -93,6 +103,14 @@ struct obj_string *copy_string(const char *chars, size_t length)
         return allocate_string(heap_chars, length, hash);
 }
 
+struct obj_upvalue *new_upvalue(struct value *slot)
+{
+        struct obj_upvalue *upvalue =
+                ALLOCATE_OBJ(struct obj_upvalue, OBJ_UPVALUE);
+        upvalue->location = slot;
+        return upvalue;
+}
+
 static void function_print(const struct obj_function *fn)
 {
         if (fn->name == NULL) {
@@ -116,6 +134,9 @@ void object_print(struct value value)
                 break;
         case OBJ_CLOSURE:
                 function_print(AS_CLOSURE(value)->fn);
+                break;
+        case OBJ_UPVALUE:
+                printf("upvalue");
                 break;
         }
 }
