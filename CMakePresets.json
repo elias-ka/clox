@@ -28,7 +28,9 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_C_COMPILER": "/usr/bin/clang",
         "DEBUG_TRACE_EXECUTION": "ON",
-        "DEBUG_PRINT_CODE": "ON"
+        "DEBUG_PRINT_CODE": "ON",
+        "ENABLE_ASAN": "ON",
+        "ENABLE_UBSAN": "ON"
       }
     },
     {
