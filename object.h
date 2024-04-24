@@ -56,6 +56,8 @@ struct obj_string {
 struct obj_upvalue {
         struct obj obj;
         struct value *location;
+        struct value closed;
+        struct obj_upvalue *next;
 };
 
 struct obj_closure {

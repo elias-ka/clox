@@ -108,6 +108,8 @@ struct obj_upvalue *new_upvalue(struct value *slot)
         struct obj_upvalue *upvalue =
                 ALLOCATE_OBJ(struct obj_upvalue, OBJ_UPVALUE);
         upvalue->location = slot;
+        upvalue->closed = NIL_VAL;
+        upvalue->next = NULL;
         return upvalue;
 }
 

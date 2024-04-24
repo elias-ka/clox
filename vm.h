@@ -23,6 +23,7 @@ struct vm {
         struct value *stack_top;
         struct table globals;
         struct table strings;
+        struct obj_upvalue *open_upvalues;
         struct obj *objects;
 };
 

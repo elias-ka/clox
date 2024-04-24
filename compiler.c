@@ -47,6 +47,7 @@ struct parse_rule {
 struct local {
         struct token name;
         i32 depth;
+        bool is_captured;
 };
 
 struct upvalue {
@@ -222,6 +223,7 @@ static void compiler_init(struct compiler *compiler, enum function_type type)
 
         struct local *local = &current->locals[current->local_count++];
         local->depth = 0;
+        local->is_captured = false;
         local->name.start = "";
         local->name.length = 0;
 }
@@ -255,9 +257,13 @@ static void end_scope(void)
         while (current->local_count > 0 &&
                current->locals[current->local_count - 1].depth >
                        current->scope_depth) {
-                // TODO: Instead of popping one by one, we could have an OP_POPN instruction,
-                // that pops N values from the stack.
-                emit_byte(OP_POP);
+                if (current->locals[current->local_count - 1].is_captured) {
+                        emit_byte(OP_CLOSE_UPVALUE);
+                } else {
+                        // TODO: Instead of popping one by one, we could have an OP_POPN instruction,
+                        // that pops N values from the stack.
+                        emit_byte(OP_POP);
+                }
                 current->local_count--;
         }
 }
@@ -553,6 +559,7 @@ static i32 resolve_upvalue(struct compiler *compiler, struct token *name)
         // Look for a matching local variable in the enclosing function.
         i32 local = resolve_local(compiler->enclosing, name);
         if (local != -1) {
+                compiler->enclosing->locals[local].is_captured = true;
                 return add_upvalue(compiler, (u8)local, true);
         }
 
@@ -576,6 +583,7 @@ static void add_local(struct token name)
         struct local *local = &current->locals[current->local_count++];
         local->name = name;
         local->depth = -1;
+        local->is_captured = false;
 }
 
 static void declare_variable(void)

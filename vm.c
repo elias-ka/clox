@@ -26,6 +26,7 @@ static void reset_stack(void)
 {
         vm.stack_top = vm.stack;
         vm.frame_count = 0;
+        vm.open_upvalues = NULL;
 }
 
 __attribute__((__format__(__printf__, 1, 0))) static void
@@ -144,8 +145,38 @@ static bool call_value(struct value callee, i32 n_args)
 
 static struct obj_upvalue *capture_upvalue(struct value *local)
 {
+        struct obj_upvalue *prev_upvalue = NULL;
+        struct obj_upvalue *upvalue = vm.open_upvalues;
+
+        while (upvalue != NULL && upvalue->location > local) {
+                prev_upvalue = upvalue;
+                upvalue = upvalue->next;
+        }
+
+        if (upvalue != NULL && upvalue->location == local) {
+                return upvalue;
+        }
+
         struct obj_upvalue *created_upvalue = new_upvalue(local);
+        created_upvalue->next = upvalue;
+
+        if (prev_upvalue == NULL) {
+                vm.open_upvalues = created_upvalue;
+        } else {
+                prev_upvalue->next = created_upvalue;
+        }
+
         return created_upvalue;
+}
+
+static void close_upvalues(const struct value *last)
+{
+        while (vm.open_upvalues != NULL && vm.open_upvalues->location >= last) {
+                struct obj_upvalue *upvalue = vm.open_upvalues;
+                upvalue->closed = *upvalue->location;
+                upvalue->location = &upvalue->closed;
+                vm.open_upvalues = upvalue->next;
+        }
 }
 
 static bool is_falsey(struct value v)
@@ -372,8 +403,14 @@ static enum interpret_result run(void)
                         }
                         break;
                 }
+                case OP_CLOSE_UPVALUE: {
+                        close_upvalues(vm.stack_top - 1);
+                        pop();
+                        break;
+                }
                 case OP_RETURN: {
                         const struct value result = pop();
+                        close_upvalues(frame->slots);
                         vm.frame_count--;
                         if (vm.frame_count == 0) {
                                 pop();
