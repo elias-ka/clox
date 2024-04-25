@@ -22,7 +22,7 @@ static struct obj *allocate_object(size_t size, enum obj_type type)
 struct obj_closure *new_closure(struct obj_function *fn)
 {
     struct obj_upvalue **upvalues =
-            ALLOCATE(struct obj_upvalue *, (u64)fn->upvalue_count);
+        ALLOCATE(struct obj_upvalue *, (u64)fn->upvalue_count);
 
     for (i32 i = 0; i < fn->upvalue_count; i++) {
         upvalues[i] = NULL;
@@ -77,7 +77,7 @@ struct obj_string *take_string(char *chars, size_t length)
 {
     const u32 hash = hash_string(chars, length);
     struct obj_string *interned =
-            table_find_string(&vm.strings, chars, length, hash);
+        table_find_string(&vm.strings, chars, length, hash);
 
     if (interned) {
         FREE_ARRAY(char, chars, length + 1);
@@ -90,7 +90,7 @@ struct obj_string *copy_string(const char *chars, size_t length)
 {
     const u32 hash = hash_string(chars, length);
     struct obj_string *interned =
-            table_find_string(&vm.strings, chars, length, hash);
+        table_find_string(&vm.strings, chars, length, hash);
 
     if (interned)
         return interned;

@@ -229,8 +229,8 @@ static enum interpret_result run(void)
         }
         printf("\n");
         disassemble_instruction(
-                &frame->closure->fn->chunk,
-                (size_t)(frame->ip - frame->closure->fn->chunk.code));
+            &frame->closure->fn->chunk,
+            (size_t)(frame->ip - frame->closure->fn->chunk.code));
 #endif
         const u8 instruction = READ_BYTE();
         switch (instruction) {
@@ -390,7 +390,7 @@ static enum interpret_result run(void)
                 const u8 index = READ_BYTE();
                 if (is_local) {
                     closure->upvalues[i] =
-                            capture_upvalue(frame->slots + index);
+                        capture_upvalue(frame->slots + index);
                 } else {
                     closure->upvalues[i] = frame->closure->upvalues[index];
                 }

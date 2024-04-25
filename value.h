@@ -26,11 +26,10 @@ struct value {
 #define AS_NUMBER(v) ((v).as.number)
 #define AS_OBJ(v) ((v).as.obj)
 
-#define BOOL_VAL(v) ((struct value){ VAL_BOOL, { .boolean = v } })
-#define NIL_VAL ((struct value){ VAL_NIL, { .number = 0 } })
-#define NUMBER_VAL(v) ((struct value){ VAL_NUMBER, { .number = v } })
-#define OBJ_VAL(object) \
-    ((struct value){ VAL_OBJ, { .obj = (struct obj *)object } })
+#define BOOL_VAL(v) ((struct value){VAL_BOOL, {.boolean = v}})
+#define NIL_VAL ((struct value){VAL_NIL, {.number = 0}})
+#define NUMBER_VAL(v) ((struct value){VAL_NUMBER, {.number = v}})
+#define OBJ_VAL(object) ((struct value){VAL_OBJ, {.obj = (struct obj *)object}})
 
 struct value_array {
     size_t capacity;

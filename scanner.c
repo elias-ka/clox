@@ -116,8 +116,8 @@ static enum token_type check_keyword(size_t start, size_t length,
                                      const char *rest, enum token_type type)
 {
     const bool is_keyword =
-            ((size_t)(scanner.current - scanner.start) == (start + length)) &&
-            (memcmp(scanner.start + start, rest, length) == 0);
+        ((size_t)(scanner.current - scanner.start) == (start + length)) &&
+        (memcmp(scanner.start + start, rest, length) == 0);
 
     if (is_keyword) {
         return type;

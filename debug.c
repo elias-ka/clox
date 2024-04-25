@@ -120,7 +120,7 @@ size_t disassemble_instruction(const struct chunk *chunk, size_t offset)
         printf("\n");
 
         const struct obj_function *fn =
-                AS_FUNCTION(chunk->constants.values[constant]);
+            AS_FUNCTION(chunk->constants.values[constant]);
 
         for (i32 i = 0; i < fn->upvalue_count; i++) {
             const u8 is_local = chunk->code[offset++];

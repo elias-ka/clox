@@ -97,7 +97,7 @@ bool table_get(const struct table *table, const struct obj_string *key,
         return false;
 
     const struct entry *entry =
-            find_entry(table->entries, table->capacity, key);
+        find_entry(table->entries, table->capacity, key);
     if (entry->key == NULL)
         return false;
 
