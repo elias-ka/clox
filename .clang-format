@@ -58,7 +58,7 @@ IncludeIsMainRegex: "(Test)?$"
 IndentCaseLabels: false
 IndentGotoLabels: false
 IndentPPDirectives: None
-IndentWidth: 8
+IndentWidth: 4
 IndentWrappedFunctionNames: false
 KeepEmptyLinesAtTheStartOfBlocks: false
 MacroBlockBegin: ""
@@ -83,5 +83,5 @@ SpacesInContainerLiterals: false
 SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
-TabWidth: 8
+TabWidth: 4
 UseTab: Never

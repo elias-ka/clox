@@ -19,52 +19,52 @@
 #define AS_CSTRING(value) (((struct obj_string *)AS_OBJ(value))->chars)
 
 enum obj_type {
-        OBJ_CLOSURE,
-        OBJ_FUNCTION,
-        OBJ_NATIVE,
-        OBJ_STRING,
-        OBJ_UPVALUE,
+    OBJ_CLOSURE,
+    OBJ_FUNCTION,
+    OBJ_NATIVE,
+    OBJ_STRING,
+    OBJ_UPVALUE,
 };
 
 struct obj {
-        enum obj_type type;
-        struct obj *next;
+    enum obj_type type;
+    struct obj *next;
 };
 
 struct obj_function {
-        struct obj obj;
-        i32 arity;
-        i32 upvalue_count;
-        struct chunk chunk;
-        struct obj_string *name;
+    struct obj obj;
+    i32 arity;
+    i32 upvalue_count;
+    struct chunk chunk;
+    struct obj_string *name;
 };
 
 typedef struct value (*native_fn)(i32 arg_count, struct value *args);
 
 struct obj_native {
-        struct obj obj;
-        native_fn fn;
+    struct obj obj;
+    native_fn fn;
 };
 
 struct obj_string {
-        struct obj obj;
-        size_t length;
-        char *chars;
-        u32 hash;
+    struct obj obj;
+    size_t length;
+    char *chars;
+    u32 hash;
 };
 
 struct obj_upvalue {
-        struct obj obj;
-        struct value *location;
-        struct value closed;
-        struct obj_upvalue *next;
+    struct obj obj;
+    struct value *location;
+    struct value closed;
+    struct obj_upvalue *next;
 };
 
 struct obj_closure {
-        struct obj obj;
-        struct obj_function *fn;
-        struct obj_upvalue **upvalues;
-        i32 upvalue_count;
+    struct obj obj;
+    struct obj_function *fn;
+    struct obj_upvalue **upvalues;
+    i32 upvalue_count;
 };
 
 struct obj_closure *new_closure(struct obj_function *fn);
@@ -77,7 +77,7 @@ void object_print(struct value value);
 
 static inline bool is_obj_type(struct value v, enum obj_type type)
 {
-        return IS_OBJ(v) && (AS_OBJ(v)->type == type);
+    return IS_OBJ(v) && (AS_OBJ(v)->type == type);
 }
 
 #endif // CLOX__OBJECT_H_

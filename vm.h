@@ -10,27 +10,27 @@
 #define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
 
 struct call_frame {
-        struct obj_closure *closure;
-        u8 *ip;
-        struct value *slots;
+    struct obj_closure *closure;
+    u8 *ip;
+    struct value *slots;
 };
 
 struct vm {
-        struct call_frame frames[FRAMES_MAX];
-        size_t frame_count;
+    struct call_frame frames[FRAMES_MAX];
+    size_t frame_count;
 
-        struct value stack[STACK_MAX];
-        struct value *stack_top;
-        struct table globals;
-        struct table strings;
-        struct obj_upvalue *open_upvalues;
-        struct obj *objects;
+    struct value stack[STACK_MAX];
+    struct value *stack_top;
+    struct table globals;
+    struct table strings;
+    struct obj_upvalue *open_upvalues;
+    struct obj *objects;
 };
 
 enum interpret_result {
-        INTERPRET_OK,
-        INTERPRET_COMPILE_ERROR,
-        INTERPRET_RUNTIME_ERROR,
+    INTERPRET_OK,
+    INTERPRET_COMPILE_ERROR,
+    INTERPRET_RUNTIME_ERROR,
 };
 
 extern struct vm vm;

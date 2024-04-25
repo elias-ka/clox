@@ -9,12 +9,12 @@ struct obj_string;
 enum value_type { VAL_BOOL, VAL_NIL, VAL_NUMBER, VAL_OBJ };
 
 struct value {
-        enum value_type type;
-        union {
-                bool boolean;
-                f64 number;
-                struct obj *obj;
-        } as;
+    enum value_type type;
+    union {
+        bool boolean;
+        f64 number;
+        struct obj *obj;
+    } as;
 };
 
 #define IS_BOOL(value) ((value).type == VAL_BOOL)
@@ -30,12 +30,12 @@ struct value {
 #define NIL_VAL ((struct value){ VAL_NIL, { .number = 0 } })
 #define NUMBER_VAL(v) ((struct value){ VAL_NUMBER, { .number = v } })
 #define OBJ_VAL(object) \
-        ((struct value){ VAL_OBJ, { .obj = (struct obj *)object } })
+    ((struct value){ VAL_OBJ, { .obj = (struct obj *)object } })
 
 struct value_array {
-        size_t capacity;
-        size_t count;
-        struct value *values;
+    size_t capacity;
+    size_t count;
+    struct value *values;
 };
 
 bool values_equal(struct value a, struct value b);

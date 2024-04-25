@@ -5,14 +5,14 @@
 #include "value.h"
 
 struct entry {
-        struct obj_string *key;
-        struct value value;
+    struct obj_string *key;
+    struct value value;
 };
 
 struct table {
-        size_t len;
-        size_t capacity;
-        struct entry *entries;
+    size_t len;
+    size_t capacity;
+    struct entry *entries;
 };
 
 void table_init(struct table *t);

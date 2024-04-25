@@ -8,7 +8,4 @@ trim_trailing_whitespace = true
 indent_style = space
 
 [*.{c,h}]
-indent_size = 8
-
-[*.json]
-indent = 2
+indent_size = 4
