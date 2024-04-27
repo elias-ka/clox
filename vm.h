@@ -24,7 +24,14 @@ struct vm {
     struct table globals;
     struct table strings;
     struct obj_upvalue *open_upvalues;
+
+    size_t bytes_allocated;
+    size_t next_gc;
+
     struct obj *objects;
+    size_t gray_count;
+    size_t gray_capacity;
+    struct obj **gray_stack;
 };
 
 enum interpret_result {
@@ -37,6 +44,8 @@ extern struct vm vm;
 
 void vm_init(void);
 void vm_free(void);
+void push(struct value v);
+struct value pop(void);
 enum interpret_result vm_interpret(const char *source);
 
 #endif // CLOX__VM_H_

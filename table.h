@@ -26,4 +26,7 @@ struct obj_string *table_find_string(const struct table *table,
                                      const char *chars, size_t length,
                                      u32 hash);
 
+void table_remove_unreachable(struct table *table);
+void mark_table(struct table *table);
+
 #endif // CLOX__TABLE_H_

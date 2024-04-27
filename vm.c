@@ -8,7 +8,7 @@
 #ifdef DEBUG_TRACE_EXECUTION
 #include "debug.h"
 #endif
-#include "memutil.h"
+#include "memory.h"
 #include "object.h"
 #include <string.h>
 #include <time.h>
@@ -70,6 +70,11 @@ void vm_init(void)
 {
     reset_stack();
     vm.objects = NULL;
+    vm.bytes_allocated = 0;
+    vm.next_gc = 1024 * 1024;
+    vm.gray_count = 0;
+    vm.gray_capacity = 0;
+    vm.gray_stack = NULL;
     table_init(&vm.globals);
     table_init(&vm.strings);
 
@@ -185,8 +190,8 @@ static bool is_falsey(struct value v)
 
 static void concatenate(void)
 {
-    const struct obj_string *b = AS_STRING(pop());
-    const struct obj_string *a = AS_STRING(pop());
+    const struct obj_string *b = AS_STRING(peek(0));
+    const struct obj_string *a = AS_STRING(peek(1));
 
     const size_t length = a->length + b->length;
     char *chars = ALLOCATE(char, length + 1);
@@ -195,6 +200,8 @@ static void concatenate(void)
     chars[length] = '\0';
 
     struct obj_string *result = take_string(chars, length);
+    pop();
+    pop();
     push(OBJ_VAL(result));
 }
 

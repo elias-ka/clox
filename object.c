@@ -1,6 +1,6 @@
 #include "object.h"
 
-#include "memutil.h"
+#include "memory.h"
 #include "table.h"
 #include "value.h"
 #include "vm.h"
@@ -14,8 +14,12 @@ static struct obj *allocate_object(size_t size, enum obj_type type)
 {
     struct obj *object = reallocate(NULL, 0, size);
     object->type = type;
+    object->is_marked = false;
     object->next = vm.objects;
     vm.objects = object;
+#ifdef DEBUG_LOG_GC
+    printf("%p allocate %zu for %d\n", (void *)object, size, type);
+#endif
     return object;
 }
 
@@ -59,7 +63,11 @@ static struct obj_string *allocate_string(char *chars, size_t length, u32 hash)
     string->chars = chars;
     string->length = length;
     string->hash = hash;
+
+    push(OBJ_VAL(string));
     table_set(&vm.strings, string, NIL_VAL);
+    pop();
+
     return string;
 }
 

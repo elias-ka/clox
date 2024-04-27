@@ -1,7 +1,8 @@
-#ifndef CLOX__MEMUTIL_H_
-#define CLOX__MEMUTIL_H_
+#ifndef CLOX__MEMORY_H_
+#define CLOX__MEMORY_H_
 
 #include "common.h"
+#include "value.h"
 
 #define ALLOCATE(type, count) \
     (type *)reallocate(NULL, 0, sizeof(type) * (count))
@@ -18,6 +19,9 @@
     reallocate(pointer, sizeof(type) * (old_count), 0)
 
 void *reallocate(void *ptr, size_t old_size, size_t new_size);
+void mark_object(struct obj *object);
+void mark_value(struct value value);
+void collect_garbage(void);
 void free_objects(void);
 
-#endif // CLOX__MEMUTIL_H_
+#endif // CLOX__MEMORY_H_

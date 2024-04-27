@@ -1,6 +1,7 @@
 #include "chunk.h"
 
-#include "memutil.h"
+#include "memory.h"
+#include "vm.h"
 #include <stdlib.h>
 
 void chunk_init(struct chunk *chunk)
@@ -37,6 +38,8 @@ void chunk_free(struct chunk *chunk)
 
 size_t chunk_add_constant(struct chunk *chunk, struct value v)
 {
+    push(v);
     value_array_write(&chunk->constants, v);
+    pop();
     return chunk->constants.count - 1;
 }

@@ -4,5 +4,6 @@
 #include "object.h"
 
 struct obj_function *compile(const char *source);
+void mark_compiler_roots(void);
 
 #endif // CLOX__COMPILER_H_

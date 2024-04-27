@@ -1,6 +1,6 @@
 #include "value.h"
 
-#include "memutil.h"
+#include "memory.h"
 #include "object.h"
 #include <math.h>
 #include <string.h>

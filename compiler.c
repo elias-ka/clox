@@ -2,6 +2,7 @@
 
 #include "chunk.h"
 #include "common.h"
+#include "memory.h"
 #include "object.h"
 #include "scanner.h"
 #include "value.h"
@@ -922,4 +923,14 @@ struct obj_function *compile(const char *source)
 
     struct obj_function *fn = end_compiler();
     return parser.had_error ? NULL : fn;
+}
+
+void mark_compiler_roots(void)
+{
+    struct compiler *compiler = current;
+
+    while (compiler != NULL) {
+        mark_object((struct obj *)compiler->fn);
+        compiler = compiler->enclosing;
+    }
 }

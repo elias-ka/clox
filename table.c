@@ -1,6 +1,6 @@
 #include "table.h"
 
-#include "memutil.h"
+#include "memory.h"
 #include "object.h"
 #include "value.h"
 #include <string.h>
@@ -154,5 +154,24 @@ struct obj_string *table_find_string(const struct table *table,
 
         // probe linearly if the bucket is occupied
         index = (index + 1) % table->capacity;
+    }
+}
+
+void table_remove_unreachable(struct table *table)
+{
+    for (size_t i = 0; i < table->capacity; i++) {
+        struct entry *entry = &table->entries[i];
+        if (entry->key != NULL && !entry->key->obj.is_marked) {
+            table_delete(table, entry->key);
+        }
+    }
+}
+
+void mark_table(struct table *table)
+{
+    for (size_t i = 0; i < table->capacity; i++) {
+        struct entry *entry = &table->entries[i];
+        mark_object((struct obj *)entry->key);
+        mark_value(entry->value);
     }
 }
