@@ -57,6 +57,15 @@ struct obj_function *new_function()
     return fn;
 }
 
+struct obj_instance *new_instance(struct obj_class *klass)
+{
+    struct obj_instance *instance =
+        ALLOCATE_OBJ(struct obj_instance, OBJ_INSTANCE);
+    instance->klass = klass;
+    table_init(&instance->fields);
+    return instance;
+}
+
 struct obj_native *new_native(native_fn fn)
 {
     struct obj_native *native = ALLOCATE_OBJ(struct obj_native, OBJ_NATIVE);
@@ -154,6 +163,9 @@ void object_print(struct value value)
         break;
     case OBJ_CLASS:
         printf("%s", AS_CLASS(value)->name->chars);
+        break;
+    case OBJ_INSTANCE:
+        printf("%s instance", AS_INSTANCE(value)->klass->name->chars);
         break;
     }
 }

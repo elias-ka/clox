@@ -129,6 +129,11 @@ static bool call_value(struct value callee, i32 n_args)
 {
     if (IS_OBJ(callee)) {
         switch (OBJ_TYPE(callee)) {
+        case OBJ_CLASS: {
+            struct obj_class *klass = AS_CLASS(callee);
+            vm.stack_top[-n_args - 1] = OBJ_VAL(new_instance(klass));
+            return true;
+        }
         case OBJ_CLOSURE:
             return call(AS_CLOSURE(callee), n_args);
         case OBJ_NATIVE: {
