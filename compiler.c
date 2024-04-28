@@ -713,6 +713,19 @@ static void function(enum function_type type)
     }
 }
 
+static void class_declaration(void)
+{
+    consume(TOKEN_IDENTIFIER, "Expect class name.");
+    u8 name_constant = identifier_constant(&parser.previous);
+    declare_variable();
+
+    emit_bytes(OP_CLASS, name_constant);
+    define_variable(name_constant);
+
+    consume(TOKEN_LEFT_BRACE, "Expect '{' before class body.");
+    consume(TOKEN_RIGHT_BRACE, "Expect '}' after class body.");
+}
+
 static void fun_declaration(void)
 {
     const u8 global = parse_variable("Expect function name.");
@@ -874,7 +887,9 @@ static void synchronize(void)
 
 static void declaration(void)
 {
-    if (match(TOKEN_FUN))
+    if (match(TOKEN_CLASS))
+        class_declaration();
+    else if (match(TOKEN_FUN))
         fun_declaration();
     else if (match(TOKEN_VAR))
         var_declaration();

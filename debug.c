@@ -134,6 +134,8 @@ size_t disassemble_instruction(const struct chunk *chunk, size_t offset)
         return simple_instruction("OP_CLOSE_UPVALUE", offset);
     case OP_RETURN:
         return simple_instruction("OP_RETURN", offset);
+    case OP_CLASS:
+        return constant_instruction("OP_CLASS", chunk, offset);
     default:
         printf("<Unknown opcode %d>\n", instruction);
         return offset + 1;

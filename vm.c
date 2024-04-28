@@ -423,6 +423,10 @@ static enum interpret_result run(void)
             frame = &vm.frames[vm.frame_count - 1];
             break;
         }
+        case OP_CLASS: {
+            push(OBJ_VAL(new_class(READ_STRING())));
+            break;
+        }
         default:
             runtime_error("Unknown opcode %d\n", instruction);
             return INTERPRET_RUNTIME_ERROR;
