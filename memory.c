@@ -88,6 +88,7 @@ static void blacken_object(struct obj *object)
     case OBJ_CLASS: {
         struct obj_class *klass = (struct obj_class *)object;
         mark_object((struct obj *)klass->name);
+        mark_table(&klass->methods);
         break;
     }
     case OBJ_CLOSURE: {
@@ -151,9 +152,12 @@ void free_object(struct obj *object)
     case OBJ_UPVALUE:
         FREE(struct obj_upvalue, object);
         break;
-    case OBJ_CLASS:
+    case OBJ_CLASS: {
+        struct obj_class *klass = (struct obj_class *)object;
+        table_free(&klass->methods);
         FREE(struct obj_class, object);
         break;
+    }
     case OBJ_INSTANCE: {
         struct obj_instance *instance = (struct obj_instance *)object;
         table_free(&instance->fields);

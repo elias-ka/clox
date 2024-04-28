@@ -27,6 +27,7 @@ struct obj_class *new_class(struct obj_string *name)
 {
     struct obj_class *klass = ALLOCATE_OBJ(struct obj_class, OBJ_CLASS);
     klass->name = name;
+    table_init(&klass->methods);
     return klass;
 }
 

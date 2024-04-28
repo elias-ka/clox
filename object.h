@@ -78,6 +78,7 @@ struct obj_closure {
 struct obj_class {
     struct obj obj;
     struct obj_string *name;
+    struct table methods;
 };
 
 struct obj_instance {
