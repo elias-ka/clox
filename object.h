@@ -7,11 +7,13 @@
 
 #define OBJ_TYPE(value) (AS_OBJ(value)->type)
 
+#define IS_CLASS(value) is_obj_type(value, OBJ_CLASS)
 #define IS_CLOSURE(value) is_obj_type(value, OBJ_CLOSURE)
 #define IS_FUNCTION(value) is_obj_type(value, OBJ_FUNCTION)
 #define IS_NATIVE(value) is_obj_type(value, OBJ_NATIVE)
 #define IS_STRING(value) is_obj_type(value, OBJ_STRING)
 
+#define AS_CLASS(value) ((struct obj_class *)AS_OBJ(value))
 #define AS_CLOSURE(value) ((struct obj_closure *)AS_OBJ(value))
 #define AS_FUNCTION(value) ((struct obj_function *)AS_OBJ(value))
 #define AS_NATIVE(value) (((struct obj_native *)AS_OBJ(value))->fn)
@@ -19,6 +21,7 @@
 #define AS_CSTRING(value) (((struct obj_string *)AS_OBJ(value))->chars)
 
 enum obj_type {
+    OBJ_CLASS,
     OBJ_CLOSURE,
     OBJ_FUNCTION,
     OBJ_NATIVE,
@@ -68,6 +71,12 @@ struct obj_closure {
     i32 upvalue_count;
 };
 
+struct obj_class {
+    struct obj obj;
+    struct obj_string *name;
+};
+
+struct obj_class *new_class(struct obj_string *name);
 struct obj_closure *new_closure(struct obj_function *fn);
 struct obj_function *new_function();
 struct obj_native *new_native(native_fn fn);

@@ -85,6 +85,11 @@ static void blacken_object(struct obj *object)
 #endif
 
     switch (object->type) {
+    case OBJ_CLASS: {
+        struct obj_class *klass = (struct obj_class *)object;
+        mark_object((struct obj *)klass->name);
+        break;
+    }
     case OBJ_CLOSURE: {
         struct obj_closure *closure = (struct obj_closure *)object;
         mark_object((struct obj *)closure->fn);
@@ -139,6 +144,9 @@ void free_object(struct obj *object)
     }
     case OBJ_UPVALUE:
         FREE(struct obj_upvalue, object);
+        break;
+    case OBJ_CLASS:
+        FREE(struct obj_class, object);
         break;
     }
 }

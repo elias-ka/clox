@@ -23,6 +23,13 @@ static struct obj *allocate_object(size_t size, enum obj_type type)
     return object;
 }
 
+struct obj_class *new_class(struct obj_string *name)
+{
+    struct obj_class *klass = ALLOCATE_OBJ(struct obj_class, OBJ_CLASS);
+    klass->name = name;
+    return klass;
+}
+
 struct obj_closure *new_closure(struct obj_function *fn)
 {
     struct obj_upvalue **upvalues =
@@ -144,6 +151,9 @@ void object_print(struct value value)
         break;
     case OBJ_UPVALUE:
         printf("upvalue");
+        break;
+    case OBJ_CLASS:
+        printf("%s", AS_CLASS(value)->name->chars);
         break;
     }
 }
