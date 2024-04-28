@@ -312,6 +312,38 @@ static enum interpret_result run(void)
             *frame->closure->upvalues[slot]->location = peek(0);
             break;
         }
+        case OP_GET_PROPERTY: {
+            if (!IS_INSTANCE(peek(0))) {
+                runtime_error("Only instances have properties.");
+                return INTERPRET_RUNTIME_ERROR;
+            }
+
+            const struct obj_instance *instance = AS_INSTANCE(peek(0));
+            const struct obj_string *name = READ_STRING();
+
+            struct value value;
+            if (table_get(&instance->fields, name, &value)) {
+                pop(); // Instance.
+                push(value);
+                break;
+            }
+
+            runtime_error("Undefined property '%s'.", name->chars);
+            return INTERPRET_RUNTIME_ERROR;
+        }
+        case OP_SET_PROPERTY: {
+            if (!IS_INSTANCE(peek(1))) {
+                runtime_error("Only instances have fields.");
+                return INTERPRET_RUNTIME_ERROR;
+            }
+
+            struct obj_instance *instance = AS_INSTANCE(peek(1));
+            table_set(&instance->fields, READ_STRING(), peek(0));
+            const struct value value = pop();
+            pop();
+            push(value);
+            break;
+        }
         case OP_EQUAL: {
             const struct value b = pop();
             const struct value a = pop();
