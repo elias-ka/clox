@@ -834,14 +834,13 @@ static void class_declaration(void)
         begin_scope();
         add_local(synthetic_token("super"));
         define_variable(0);
-        
 
-        named_variable(class_name, false);
+        named_variable(class_name, /*can_assign=*/false);
         emit_byte(OP_INHERIT);
         class_compiler.has_superclass = true;
     }
 
-    named_variable(class_name, false);
+    named_variable(class_name, /*can_assign=*/false);
     consume(TOKEN_LEFT_BRACE, "Expect '{' before class body.");
     while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
         method();
