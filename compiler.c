@@ -76,6 +76,7 @@ struct compiler {
 
 struct class_compiler {
     struct class_compiler *enclosing;
+    bool has_superclass;
 };
 
 struct compiler *current = NULL;
@@ -452,6 +453,11 @@ static void variable(bool can_assign)
     named_variable(parser.previous, can_assign);
 }
 
+static struct token synthetic_token(const char *text)
+{
+    return (struct token){.start = text, .length = strlen(text)};
+}
+
 static void this_(bool can_assign)
 {
     (void)can_assign;
@@ -787,8 +793,26 @@ static void class_declaration(void)
 
     struct class_compiler class_compiler = {
         .enclosing = current_class,
+        .has_superclass = false,
     };
     current_class = &class_compiler;
+
+    if (match(TOKEN_LESS)) {
+        consume(TOKEN_IDENTIFIER, "Expect superclass name.");
+        variable(false);
+
+        if (identifiers_equal(&class_name, &parser.previous))
+            error("A class cannot inherit from itself.");
+
+        begin_scope();
+        add_local(synthetic_token("super"));
+        define_variable(0);
+        
+
+        named_variable(class_name, false);
+        emit_byte(OP_INHERIT);
+        class_compiler.has_superclass = true;
+    }
 
     named_variable(class_name, false);
     consume(TOKEN_LEFT_BRACE, "Expect '{' before class body.");
@@ -797,6 +821,10 @@ static void class_declaration(void)
     }
     consume(TOKEN_RIGHT_BRACE, "Expect '}' after class body.");
     emit_byte(OP_POP);
+
+    if (class_compiler.has_superclass) {
+        end_scope();
+    }
 
     current_class = current_class->enclosing;
 }
