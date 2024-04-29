@@ -123,7 +123,6 @@ static void blacken_object(struct obj *object)
     case OBJ_NATIVE:
     case OBJ_STRING:
         break;
-        break;
     }
 }
 
