@@ -473,8 +473,16 @@ static void super_(bool can_assign)
     const u8 name = identifier_constant(&parser.previous);
 
     named_variable(synthetic_token("this"), /*can_assign=*/false);
-    named_variable(synthetic_token("super"), /*can_assign=*/false);
-    emit_bytes(OP_GET_SUPER, name);
+
+    if (match(TOKEN_LEFT_PAREN)) {
+        const u8 n_args = argument_list();
+        named_variable(synthetic_token("super"), /*can_assign=*/false);
+        emit_bytes(OP_SUPER_INVOKE, name);
+        emit_byte(n_args);
+    } else {
+        named_variable(synthetic_token("super"), /*can_assign=*/false);
+        emit_bytes(OP_GET_SUPER, name);
+    }
 }
 
 static void this_(bool can_assign)

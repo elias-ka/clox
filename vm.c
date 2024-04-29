@@ -516,6 +516,16 @@ static enum interpret_result run(void)
             frame = &vm.frames[vm.frame_count - 1];
             break;
         }
+        case OP_SUPER_INVOKE: {
+            struct obj_string *method = READ_STRING();
+            const u8 n_args = READ_BYTE();
+            struct obj_class *superclass = AS_CLASS(pop());
+            if (!invoke_from_class(superclass, method, n_args)) {
+                return INTERPRET_RUNTIME_ERROR;
+            }
+            frame = &vm.frames[vm.frame_count - 1];
+            break;
+        }
         case OP_CLOSURE: {
             struct obj_function *fn = AS_FUNCTION(READ_CONSTANT());
             const struct obj_closure *closure = new_closure(fn);
