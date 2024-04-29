@@ -42,7 +42,7 @@ runtime_error(const char *format, ...)
         const struct call_frame *frame = &vm.frames[i];
         const struct obj_function *fn = frame->closure->fn;
         const size_t instruction = (size_t)(frame->ip - fn->chunk.code - 1);
-        fprintf(stderr, "[line %zu] in ", fn->chunk.lines[instruction]);
+        fprintf(stderr, "[line %zu] in ", fn->chunk.lines[instruction].line);
 
         if (fn->name) {
             fprintf(stderr, "%s()\n", fn->name->chars);

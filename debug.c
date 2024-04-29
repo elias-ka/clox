@@ -65,10 +65,12 @@ static size_t jump_instruction(const char *name, i32 sign,
 size_t disassemble_instruction(const struct chunk *chunk, size_t offset)
 {
     printf("%04zu ", offset);
-    if ((offset > 0) && (chunk->lines[offset] == chunk->lines[offset - 1])) {
+    const size_t line = chunk_getline(chunk, offset);
+
+    if ((offset > 0) && line == chunk_getline(chunk, offset - 1)) {
         printf("   | ");
     } else {
-        printf("%4zu ", chunk->lines[offset]);
+        printf("%4zu ", line);
     }
 
     const u8 instruction = chunk->code[offset];

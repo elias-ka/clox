@@ -44,19 +44,25 @@ enum op_code {
     OP_METHOD,
 };
 
+struct line_start {
+    size_t offset;
+    size_t line;
+};
+
 struct chunk {
     size_t size;
     size_t capacity;
     u8 *code;
-    // TODO: Storing the line number for each instruction is not really necessary
-    //       and wastes some memory.
-    size_t *lines;
     struct value_array constants;
+    struct line_start *lines;
+    size_t line_count;
+    size_t line_capacity;
 };
 
 void chunk_init(struct chunk *chunk);
 void chunk_write(struct chunk *chunk, u8 byte, size_t line);
 void chunk_free(struct chunk *chunk);
+size_t chunk_getline(const struct chunk *chunk, size_t instruction);
 
 /**
  * Add a constant to the chunk.
