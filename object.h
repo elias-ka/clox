@@ -50,7 +50,7 @@ struct obj_function {
     struct obj_string *name;
 };
 
-typedef value_t (*native_fn)(i32 arg_count, value_t *args);
+typedef value_ty (*native_fn)(i32 arg_count, value_ty *args);
 
 struct obj_native {
     struct obj obj;
@@ -66,8 +66,8 @@ struct obj_string {
 
 struct obj_upvalue {
     struct obj obj;
-    value_t *location;
-    value_t closed;
+    value_ty *location;
+    value_ty closed;
     struct obj_upvalue *next;
 };
 
@@ -81,7 +81,7 @@ struct obj_closure {
 struct obj_class {
     struct obj obj;
     struct obj_string *name;
-    value_t initializer;
+    value_ty initializer;
     struct table methods;
 };
 
@@ -93,11 +93,11 @@ struct obj_instance {
 
 struct obj_bound_method {
     struct obj obj;
-    value_t receiver;
+    value_ty receiver;
     struct obj_closure *method;
 };
 
-struct obj_bound_method *new_bound_method(value_t receiver,
+struct obj_bound_method *new_bound_method(value_ty receiver,
                                           struct obj_closure *method);
 struct obj_class *new_class(struct obj_string *name);
 struct obj_closure *new_closure(struct obj_function *fn);
@@ -106,11 +106,11 @@ struct obj_instance *new_instance(struct obj_class *klass);
 struct obj_native *new_native(native_fn fn);
 struct obj_string *take_string(char *chars, size_t length);
 struct obj_string *copy_string(const char *chars, size_t length);
-struct obj_upvalue *new_upvalue(value_t *slot);
-void object_print(value_t value);
+struct obj_upvalue *new_upvalue(value_ty *slot);
+void object_print(value_ty value);
 
 static inline bool __attribute__((unused))
-is_obj_type(value_t v, enum obj_type type)
+is_obj_type(value_ty v, enum obj_type type)
 {
     return IS_OBJ(v) && (AS_OBJ(v)->type == type);
 }

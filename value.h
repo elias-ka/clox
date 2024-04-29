@@ -15,7 +15,7 @@ struct obj_string;
 #define TAG_FALSE 2 // 10
 #define TAG_TRUE 3 // 11
 
-typedef u64 value_t;
+typedef u64 value_ty;
 
 #define IS_BOOL(v) (((v) | 1) == TRUE_VAL)
 #define IS_NIL(v) ((v) == NIL_VAL)
@@ -27,22 +27,22 @@ typedef u64 value_t;
 #define AS_OBJ(v) ((struct obj *)(uintptr_t)((v) & ~(SIGN_BIT | QNAN)))
 
 #define BOOL_VAL(b) ((b) ? TRUE_VAL : FALSE_VAL)
-#define FALSE_VAL ((value_t)(u64)(QNAN | TAG_FALSE))
-#define TRUE_VAL ((value_t)(u64)(QNAN | TAG_TRUE))
-#define NIL_VAL ((value_t)(u64)(QNAN | TAG_NIL))
+#define FALSE_VAL ((value_ty)(u64)(QNAN | TAG_FALSE))
+#define TRUE_VAL ((value_ty)(u64)(QNAN | TAG_TRUE))
+#define NIL_VAL ((value_ty)(u64)(QNAN | TAG_NIL))
 #define NUMBER_VAL(num) num_to_value(num)
-#define OBJ_VAL(obj) (value_t)(SIGN_BIT | QNAN | (u64)(uintptr_t)(obj))
+#define OBJ_VAL(obj) (value_ty)(SIGN_BIT | QNAN | (u64)(uintptr_t)(obj))
 
-static inline double value_to_num(value_t value)
+static inline double value_to_num(value_ty value)
 {
     double num;
     memcpy(&num, &value, sizeof(double));
     return num;
 }
 
-static inline value_t num_to_value(double num)
+static inline value_ty num_to_value(double num)
 {
-    value_t value;
+    value_ty value;
     memcpy(&value, &num, sizeof(double));
     return value;
 }
@@ -50,8 +50,7 @@ static inline value_t num_to_value(double num)
 #else
 enum value_type { VAL_BOOL, VAL_NIL, VAL_NUMBER, VAL_OBJ };
 
-value_t
-{
+struct value {
     enum value_type type;
     union {
         bool boolean;
@@ -60,7 +59,7 @@ value_t
     } as;
 };
 
-typedef value_t value_t;
+typedef struct value value_ty;
 
 #define IS_BOOL(value) ((value).type == VAL_BOOL)
 #define IS_NIL(value) ((value).type == VAL_NIL)
@@ -71,22 +70,22 @@ typedef value_t value_t;
 #define AS_NUMBER(v) ((v).as.number)
 #define AS_OBJ(v) ((v).as.obj)
 
-#define BOOL_VAL(v) ((value_t){VAL_BOOL, {.boolean = v}})
-#define NIL_VAL ((value_t){VAL_NIL, {.number = 0}})
-#define NUMBER_VAL(v) ((value_t){VAL_NUMBER, {.number = v}})
-#define OBJ_VAL(object) ((value_t){VAL_OBJ, {.obj = (struct obj *)object}})
+#define BOOL_VAL(v) ((value_ty){VAL_BOOL, {.boolean = v}})
+#define NIL_VAL ((value_ty){VAL_NIL, {.number = 0}})
+#define NUMBER_VAL(v) ((value_ty){VAL_NUMBER, {.number = v}})
+#define OBJ_VAL(object) ((value_ty){VAL_OBJ, {.obj = (struct obj *)object}})
 #endif
 
 struct value_array {
     size_t capacity;
     size_t count;
-    value_t *values;
+    value_ty *values;
 };
 
-bool values_equal(value_t a, value_t b);
+bool values_equal(value_ty a, value_ty b);
 void value_array_init(struct value_array *array);
-void value_array_write(struct value_array *array, value_t v);
+void value_array_write(struct value_array *array, value_ty v);
 void value_array_free(struct value_array *array);
-void value_print(value_t v);
+void value_print(value_ty v);
 
 #endif // CLOX__VALUE_H_

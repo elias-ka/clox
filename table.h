@@ -6,7 +6,7 @@
 
 struct entry {
     struct obj_string *key;
-    value_t value;
+    value_ty value;
 };
 
 struct table {
@@ -17,9 +17,9 @@ struct table {
 
 void table_init(struct table *t);
 void table_free(struct table *t);
-bool table_set(struct table *table, struct obj_string *key, value_t value);
+bool table_set(struct table *table, struct obj_string *key, value_ty value);
 bool table_get(const struct table *table, const struct obj_string *key,
-               value_t *value);
+               value_ty *value);
 bool table_delete(const struct table *table, const struct obj_string *key);
 void table_add_all(const struct table *source, struct table *dest);
 struct obj_string *table_find_string(const struct table *table,

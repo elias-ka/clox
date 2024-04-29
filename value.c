@@ -12,13 +12,13 @@ void value_array_init(struct value_array *array)
     array->values = NULL;
 }
 
-void value_array_write(struct value_array *array, value_t v)
+void value_array_write(struct value_array *array, value_ty v)
 {
     if (array->capacity < (array->count + 1)) {
         const size_t old_capacity = array->capacity;
         array->capacity = GROW_CAPACITY(old_capacity);
         array->values =
-            GROW_ARRAY(value_t, array->values, old_capacity, array->capacity);
+            GROW_ARRAY(value_ty, array->values, old_capacity, array->capacity);
     }
     array->values[array->count] = v;
     array->count++;
@@ -26,11 +26,11 @@ void value_array_write(struct value_array *array, value_t v)
 
 void value_array_free(struct value_array *array)
 {
-    FREE_ARRAY(value_t, array->values, array->capacity);
+    FREE_ARRAY(value_ty, array->values, array->capacity);
     value_array_init(array);
 }
 
-void value_print(value_t v)
+void value_print(value_ty v)
 {
 #ifdef NAN_BOXING
     if (IS_BOOL(v)) {
@@ -60,7 +60,7 @@ void value_print(value_t v)
 #endif
 }
 
-bool values_equal(value_t a, value_t b)
+bool values_equal(value_ty a, value_ty b)
 {
 #ifdef NAN_BOXING
     if (IS_NUMBER(a) && IS_NUMBER(b)) {

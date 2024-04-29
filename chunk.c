@@ -70,7 +70,7 @@ size_t chunk_getline(const struct chunk *chunk, size_t instruction)
     }
 }
 
-size_t chunk_add_constant(struct chunk *chunk, value_t v)
+size_t chunk_add_constant(struct chunk *chunk, value_ty v)
 {
     push(v);
     value_array_write(&chunk->constants, v);
