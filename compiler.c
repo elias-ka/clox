@@ -358,6 +358,10 @@ static void dot(bool can_assign)
     if (can_assign && match(TOKEN_EQUAL)) {
         expression();
         emit_bytes(OP_SET_PROPERTY, name);
+    } else if (match(TOKEN_LEFT_PAREN)) {
+        u8 n_args = argument_list();
+        emit_bytes(OP_INVOKE, name);
+        emit_byte(n_args);
     } else {
         emit_bytes(OP_GET_PROPERTY, name);
     }

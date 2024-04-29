@@ -4,6 +4,7 @@
 #include "common.h"
 #include "object.h"
 #include "value.h"
+#include <stdio.h>
 
 void disassemble_chunk(const struct chunk *chunk, const char *name)
 {
@@ -23,6 +24,18 @@ static size_t constant_instruction(const char *name, const struct chunk *chunk,
     value_print(chunk->constants.values[constant]);
     printf("'\n");
     return offset + 2;
+}
+
+static size_t invoke_instruction(const char *name, struct chunk *chunk,
+                                 size_t offset)
+{
+    const u8 constant = chunk->code[offset + 1];
+    const u8 n_args = chunk->code[offset + 2];
+
+    printf("%-16s (%d args) %4d '", name, n_args, constant);
+    value_print(chunk->constants.values[constant]);
+    printf("'\n");
+    return offset + 3;
 }
 
 static size_t simple_instruction(const char *name, size_t offset)
@@ -116,6 +129,8 @@ size_t disassemble_instruction(const struct chunk *chunk, size_t offset)
         return jump_instruction("OP_LOOP", -1, chunk, offset);
     case OP_CALL:
         return byte_instruction("OP_CALL", chunk, offset);
+    case OP_INVOKE:
+        return invoke_instruction("OP_INVOKE", chunk, offset);
     case OP_CLOSURE: {
         offset++;
         const u8 constant = chunk->code[offset++];

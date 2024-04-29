@@ -168,6 +168,37 @@ static bool call_value(struct value callee, i32 n_args)
     return false;
 }
 
+static bool invoke_from_class(struct obj_class *klass, struct obj_string *name,
+                              i32 n_args)
+{
+    struct value method;
+    if (!table_get(&klass->methods, name, &method)) {
+        runtime_error("Undefined property '%s'.", name->chars);
+        return false;
+    }
+
+    return call(AS_CLOSURE(method), n_args);
+}
+
+static bool invoke(struct obj_string *name, i32 n_args)
+{
+    struct value receiver = peek(n_args);
+    if (!IS_INSTANCE(receiver)) {
+        runtime_error("Only instances have methods.");
+        return false;
+    }
+
+    struct obj_instance *instance = AS_INSTANCE(receiver);
+
+    struct value value;
+    if (table_get(&instance->fields, name, &value)) {
+        vm.stack_top[-n_args - 1] = value;
+        return call_value(value, n_args);
+    }
+
+    return invoke_from_class(instance->klass, name, n_args);
+}
+
 static bool bind_method(struct obj_class *klass, struct obj_string *name)
 {
     struct value method;
@@ -462,6 +493,15 @@ static enum interpret_result run(void)
         case OP_CALL: {
             const i32 n_args = READ_BYTE();
             if (!call_value(peek(n_args), n_args)) {
+                return INTERPRET_RUNTIME_ERROR;
+            }
+            frame = &vm.frames[vm.frame_count - 1];
+            break;
+        }
+        case OP_INVOKE: {
+            struct obj_string *method = READ_STRING();
+            const u8 n_args = READ_BYTE();
+            if (!invoke(method, n_args)) {
                 return INTERPRET_RUNTIME_ERROR;
             }
             frame = &vm.frames[vm.frame_count - 1];
