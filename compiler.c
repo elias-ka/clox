@@ -458,6 +458,25 @@ static struct token synthetic_token(const char *text)
     return (struct token){.start = text, .length = strlen(text)};
 }
 
+static void super_(bool can_assign)
+{
+    (void)can_assign;
+
+    if (current_class == NULL) {
+        error("Cannot use 'super' outside of a class.");
+    } else if (!current_class->has_superclass) {
+        error("Cannot use 'super' in a class with no superclass.");
+    }
+
+    consume(TOKEN_DOT, "Expect '.' after 'super'.");
+    consume(TOKEN_IDENTIFIER, "Expect superclass method name.");
+    const u8 name = identifier_constant(&parser.previous);
+
+    named_variable(synthetic_token("this"), /*can_assign=*/false);
+    named_variable(synthetic_token("super"), /*can_assign=*/false);
+    emit_bytes(OP_GET_SUPER, name);
+}
+
 static void this_(bool can_assign)
 {
     (void)can_assign;
@@ -524,7 +543,7 @@ struct parse_rule rules[40] = {
     [TOKEN_OR] = {NULL, or_, PREC_OR},
     [TOKEN_PRINT] = {NULL, NULL, PREC_NONE},
     [TOKEN_RETURN] = {NULL, NULL, PREC_NONE},
-    [TOKEN_SUPER] = {NULL, NULL, PREC_NONE},
+    [TOKEN_SUPER] = {super_, NULL, PREC_NONE},
     [TOKEN_THIS] = {this_, NULL, PREC_NONE},
     [TOKEN_TRUE] = {literal, NULL, PREC_NONE},
     [TOKEN_VAR] = {NULL, NULL, PREC_NONE},

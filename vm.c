@@ -417,6 +417,15 @@ static enum interpret_result run(void)
             push(value);
             break;
         }
+        case OP_GET_SUPER: {
+            struct obj_string *name = READ_STRING();
+            struct obj_class *superclass = AS_CLASS(pop());
+
+            if (!bind_method(superclass, name)) {
+                return INTERPRET_RUNTIME_ERROR;
+            }
+            break;
+        }
         case OP_EQUAL: {
             const struct value b = pop();
             const struct value a = pop();
