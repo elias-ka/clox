@@ -56,7 +56,12 @@ struct upvalue {
     bool is_local;
 };
 
-enum function_type { TYPE_FUNCTION, TYPE_METHOD, TYPE_SCRIPT };
+enum function_type {
+    TYPE_FUNCTION,
+    TYPE_INITIALIZER,
+    TYPE_METHOD,
+    TYPE_SCRIPT
+};
 
 struct compiler {
     struct compiler *enclosing;
@@ -181,7 +186,13 @@ static size_t emit_jump(u8 instruction)
 
 static void emit_return(void)
 {
-    emit_byte(OP_NIL);
+    // In an initializer, return the instance implicitly.
+    if (current->fn_type == TYPE_INITIALIZER) {
+        emit_bytes(OP_GET_LOCAL, 0);
+    } else {
+        emit_byte(OP_NIL);
+    }
+
     emit_byte(OP_RETURN);
 }
 
@@ -751,7 +762,12 @@ static void method(void)
 {
     consume(TOKEN_IDENTIFIER, "Expect method name.");
     const u8 constant = identifier_constant(&parser.previous);
-    function(TYPE_METHOD);
+    enum function_type type = TYPE_METHOD;
+    if (parser.previous.length == 4 &&
+        memcmp(parser.previous.start, "init", 4) == 0) {
+        type = TYPE_INITIALIZER;
+    }
+    function(type);
     emit_bytes(OP_METHOD, constant);
 }
 
@@ -891,6 +907,9 @@ static void return_statement(void)
     if (match(TOKEN_SEMICOLON)) {
         emit_return();
     } else {
+        if (current->fn_type == TYPE_INITIALIZER)
+            error("Cannot return a value from an initializer.");
+
         expression();
         consume(TOKEN_SEMICOLON, "Expect ';' after return value.");
         emit_byte(OP_RETURN);

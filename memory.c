@@ -194,6 +194,7 @@ static void mark_roots(void)
 
     mark_table(&vm.globals);
     mark_compiler_roots();
+    mark_object((struct obj *)vm.init_string);
 }
 
 static void trace_references(void)
