@@ -23,6 +23,16 @@ static struct obj *allocate_object(size_t size, enum obj_type type)
     return object;
 }
 
+struct obj_bound_method *new_bound_method(struct value receiver,
+                                          struct obj_closure *method)
+{
+    struct obj_bound_method *bound =
+        ALLOCATE_OBJ(struct obj_bound_method, OBJ_BOUND_METHOD);
+    bound->receiver = receiver;
+    bound->method = method;
+    return bound;
+}
+
 struct obj_class *new_class(struct obj_string *name)
 {
     struct obj_class *klass = ALLOCATE_OBJ(struct obj_class, OBJ_CLASS);
@@ -147,6 +157,9 @@ static void function_print(const struct obj_function *fn)
 void object_print(struct value value)
 {
     switch (OBJ_TYPE(value)) {
+    case OBJ_BOUND_METHOD:
+        function_print(AS_BOUND_METHOD(value)->method->fn);
+        break;
     case OBJ_STRING:
         printf("%s", AS_CSTRING(value));
         break;

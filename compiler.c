@@ -726,17 +726,34 @@ static void function(enum function_type type)
     }
 }
 
+static void method(void)
+{
+    consume(TOKEN_IDENTIFIER, "Expect method name.");
+    const u8 constant = identifier_constant(&parser.previous);
+
+    enum function_type type = TYPE_FUNCTION;
+    function(type);
+
+    emit_bytes(OP_METHOD, constant);
+}
+
 static void class_declaration(void)
 {
     consume(TOKEN_IDENTIFIER, "Expect class name.");
-    u8 name_constant = identifier_constant(&parser.previous);
+    const struct token class_name = parser.previous;
+    const u8 name_constant = identifier_constant(&parser.previous);
     declare_variable();
 
     emit_bytes(OP_CLASS, name_constant);
     define_variable(name_constant);
+    named_variable(class_name, false);
 
     consume(TOKEN_LEFT_BRACE, "Expect '{' before class body.");
+    while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
+        method();
+    }
     consume(TOKEN_RIGHT_BRACE, "Expect '}' after class body.");
+    emit_byte(OP_POP);
 }
 
 static void fun_declaration(void)

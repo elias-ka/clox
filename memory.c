@@ -85,6 +85,12 @@ static void blacken_object(struct obj *object)
 #endif
 
     switch (object->type) {
+    case OBJ_BOUND_METHOD: {
+        struct obj_bound_method *bound = (struct obj_bound_method *)object;
+        mark_value(bound->receiver);
+        mark_object((struct obj *)bound->method);
+        break;
+    }
     case OBJ_CLASS: {
         struct obj_class *klass = (struct obj_class *)object;
         mark_object((struct obj *)klass->name);
@@ -116,6 +122,7 @@ static void blacken_object(struct obj *object)
         break;
     case OBJ_NATIVE:
     case OBJ_STRING:
+        break;
         break;
     }
 }
@@ -164,6 +171,9 @@ void free_object(struct obj *object)
         FREE(struct obj_instance, object);
         break;
     }
+    case OBJ_BOUND_METHOD:
+        FREE(struct obj_bound_method, object);
+        break;
     }
 }
 

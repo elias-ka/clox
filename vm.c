@@ -129,6 +129,10 @@ static bool call_value(struct value callee, i32 n_args)
 {
     if (IS_OBJ(callee)) {
         switch (OBJ_TYPE(callee)) {
+        case OBJ_BOUND_METHOD: {
+            const struct obj_bound_method *bound = AS_BOUND_METHOD(callee);
+            return call(bound->method, n_args);
+        }
         case OBJ_CLASS: {
             struct obj_class *klass = AS_CLASS(callee);
             vm.stack_top[-n_args - 1] = OBJ_VAL(new_instance(klass));
@@ -150,6 +154,21 @@ static bool call_value(struct value callee, i32 n_args)
     }
     runtime_error("Can only call functions and classes.");
     return false;
+}
+
+static bool bind_method(struct obj_class *klass, struct obj_string *name)
+{
+    struct value method;
+    if (!table_get(&klass->methods, name, &method)) {
+        runtime_error("Undefined property '%s'.", name->chars);
+        return false;
+    }
+
+    struct obj_bound_method *bound =
+        new_bound_method(peek(0), AS_CLOSURE(method));
+    pop();
+    push(OBJ_VAL(bound));
+    return true;
 }
 
 static struct obj_upvalue *capture_upvalue(struct value *local)
@@ -186,6 +205,14 @@ static void close_upvalues(const struct value *last)
         upvalue->location = &upvalue->closed;
         vm.open_upvalues = upvalue->next;
     }
+}
+
+static void define_method(struct obj_string *name)
+{
+    struct value method = peek(0);
+    struct obj_class *klass = AS_CLASS(peek(1));
+    table_set(&klass->methods, name, method);
+    pop();
 }
 
 static bool is_falsey(struct value v)
@@ -319,7 +346,7 @@ static enum interpret_result run(void)
             }
 
             const struct obj_instance *instance = AS_INSTANCE(peek(0));
-            const struct obj_string *name = READ_STRING();
+            struct obj_string *name = READ_STRING();
 
             struct value value;
             if (table_get(&instance->fields, name, &value)) {
@@ -328,8 +355,11 @@ static enum interpret_result run(void)
                 break;
             }
 
-            runtime_error("Undefined property '%s'.", name->chars);
-            return INTERPRET_RUNTIME_ERROR;
+            if (!bind_method(instance->klass, name)) {
+                return INTERPRET_RUNTIME_ERROR;
+            }
+
+            break;
         }
         case OP_SET_PROPERTY: {
             if (!IS_INSTANCE(peek(1))) {
@@ -462,6 +492,10 @@ static enum interpret_result run(void)
         }
         case OP_CLASS: {
             push(OBJ_VAL(new_class(READ_STRING())));
+            break;
+        }
+        case OP_METHOD: {
+            define_method(READ_STRING());
             break;
         }
         default:
