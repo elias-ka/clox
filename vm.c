@@ -131,6 +131,7 @@ static bool call_value(struct value callee, i32 n_args)
         switch (OBJ_TYPE(callee)) {
         case OBJ_BOUND_METHOD: {
             const struct obj_bound_method *bound = AS_BOUND_METHOD(callee);
+            vm.stack_top[-n_args - 1] = bound->receiver;
             return call(bound->method, n_args);
         }
         case OBJ_CLASS: {
