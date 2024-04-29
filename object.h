@@ -81,6 +81,7 @@ struct obj_closure {
 struct obj_class {
     struct obj obj;
     struct obj_string *name;
+    struct value initializer;
     struct table methods;
 };
 

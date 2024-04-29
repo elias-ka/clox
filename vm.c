@@ -141,9 +141,8 @@ static bool call_value(struct value callee, i32 n_args)
         case OBJ_CLASS: {
             struct obj_class *klass = AS_CLASS(callee);
             vm.stack_top[-n_args - 1] = OBJ_VAL(new_instance(klass));
-            struct value initializer;
-            if (table_get(&klass->methods, vm.init_string, &initializer)) {
-                return call(AS_CLOSURE(initializer), n_args);
+            if (!IS_NIL(klass->initializer)) {
+                return call(AS_CLOSURE(klass->initializer), n_args);
             } else if (n_args != 0) {
                 runtime_error("Expected 0 arguments but got %d.", n_args);
                 return false;
@@ -254,7 +253,12 @@ static void define_method(struct obj_string *name)
 {
     struct value method = peek(0);
     struct obj_class *klass = AS_CLASS(peek(1));
+
     table_set(&klass->methods, name, method);
+
+    if (name == vm.init_string)
+        klass->initializer = method;
+
     pop();
 }
 
