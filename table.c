@@ -23,7 +23,7 @@ void table_free(struct table *t)
 static struct entry *find_entry(struct entry *entries, size_t capacity,
                                 const struct obj_string *key)
 {
-    size_t index = key->hash % capacity;
+    size_t index = key->hash & (capacity - 1);
     struct entry *tombstone = NULL;
 
     for (;;) {
@@ -43,7 +43,7 @@ static struct entry *find_entry(struct entry *entries, size_t capacity,
         }
 
         // probe linearly if the bucket is occupied
-        index = (index + 1) % capacity;
+        index = (index + 1) & (capacity - 1);
     }
 }
 
@@ -136,7 +136,7 @@ struct obj_string *table_find_string(const struct table *table,
     if (table->len == 0)
         return NULL;
 
-    size_t index = hash % table->capacity;
+    size_t index = hash & (table->capacity - 1);
     for (;;) {
         const struct entry *entry = &table->entries[index];
 
@@ -153,7 +153,7 @@ struct obj_string *table_find_string(const struct table *table,
         }
 
         // probe linearly if the bucket is occupied
-        index = (index + 1) % table->capacity;
+        index = (index + 1) & (table->capacity - 1);
     }
 }
 
