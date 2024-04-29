@@ -12,15 +12,15 @@
 struct call_frame {
     struct obj_closure *closure;
     u8 *ip;
-    struct value *slots;
+    value_t *slots;
 };
 
 struct vm {
     struct call_frame frames[FRAMES_MAX];
     size_t frame_count;
 
-    struct value stack[STACK_MAX];
-    struct value *stack_top;
+    value_t stack[STACK_MAX];
+    value_t *stack_top;
     struct table globals;
     struct table strings;
     struct obj_string *init_string;
@@ -45,8 +45,8 @@ extern struct vm vm;
 
 void vm_init(void);
 void vm_free(void);
-void push(struct value v);
-struct value pop(void);
+void push(value_t v);
+value_t pop(void);
 enum interpret_result vm_interpret(const char *source);
 
 #endif // CLOX__VM_H_

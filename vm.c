@@ -15,7 +15,7 @@
 
 struct vm vm;
 
-static struct value clock_native(i32 n_args, struct value *args)
+static value_t clock_native(i32 n_args, value_t *args)
 {
     (void)n_args;
     (void)args;
@@ -54,8 +54,8 @@ runtime_error(const char *format, ...)
     reset_stack();
 }
 
-void push(struct value v);
-struct value pop(void);
+void push(value_t v);
+value_t pop(void);
 
 static void define_native(const char *name, native_fn fn)
 {
@@ -92,19 +92,19 @@ void vm_free(void)
     vm.init_string = NULL;
 }
 
-void push(struct value v)
+void push(value_t v)
 {
     *vm.stack_top = v;
     vm.stack_top++;
 }
 
-struct value pop(void)
+value_t pop(void)
 {
     vm.stack_top--;
     return *vm.stack_top;
 }
 
-static struct value peek(i32 distance)
+static value_t peek(i32 distance)
 {
     return vm.stack_top[-1 - distance];
 }
@@ -129,7 +129,7 @@ static bool call(struct obj_closure *closure, i32 n_args)
     return true;
 }
 
-static bool call_value(struct value callee, i32 n_args)
+static bool call_value(value_t callee, i32 n_args)
 {
     if (IS_OBJ(callee)) {
         switch (OBJ_TYPE(callee)) {
@@ -153,7 +153,7 @@ static bool call_value(struct value callee, i32 n_args)
             return call(AS_CLOSURE(callee), n_args);
         case OBJ_NATIVE: {
             native_fn fn = AS_NATIVE(callee);
-            struct value result = fn(n_args, vm.stack_top - n_args);
+            value_t result = fn(n_args, vm.stack_top - n_args);
             vm.stack_top -= n_args + 1;
             push(result);
             return true;
@@ -170,7 +170,7 @@ static bool call_value(struct value callee, i32 n_args)
 static bool invoke_from_class(struct obj_class *klass, struct obj_string *name,
                               i32 n_args)
 {
-    struct value method;
+    value_t method;
     if (!table_get(&klass->methods, name, &method)) {
         runtime_error("Undefined property '%s'.", name->chars);
         return false;
@@ -181,7 +181,7 @@ static bool invoke_from_class(struct obj_class *klass, struct obj_string *name,
 
 static bool invoke(struct obj_string *name, i32 n_args)
 {
-    struct value receiver = peek(n_args);
+    value_t receiver = peek(n_args);
     if (!IS_INSTANCE(receiver)) {
         runtime_error("Only instances have methods.");
         return false;
@@ -189,7 +189,7 @@ static bool invoke(struct obj_string *name, i32 n_args)
 
     struct obj_instance *instance = AS_INSTANCE(receiver);
 
-    struct value value;
+    value_t value;
     if (table_get(&instance->fields, name, &value)) {
         vm.stack_top[-n_args - 1] = value;
         return call_value(value, n_args);
@@ -200,7 +200,7 @@ static bool invoke(struct obj_string *name, i32 n_args)
 
 static bool bind_method(struct obj_class *klass, struct obj_string *name)
 {
-    struct value method;
+    value_t method;
     if (!table_get(&klass->methods, name, &method)) {
         runtime_error("Undefined property '%s'.", name->chars);
         return false;
@@ -213,7 +213,7 @@ static bool bind_method(struct obj_class *klass, struct obj_string *name)
     return true;
 }
 
-static struct obj_upvalue *capture_upvalue(struct value *local)
+static struct obj_upvalue *capture_upvalue(value_t *local)
 {
     struct obj_upvalue *prev_upvalue = NULL;
     struct obj_upvalue *upvalue = vm.open_upvalues;
@@ -239,7 +239,7 @@ static struct obj_upvalue *capture_upvalue(struct value *local)
     return created_upvalue;
 }
 
-static void close_upvalues(const struct value *last)
+static void close_upvalues(const value_t *last)
 {
     while (vm.open_upvalues != NULL && vm.open_upvalues->location >= last) {
         struct obj_upvalue *upvalue = vm.open_upvalues;
@@ -251,7 +251,7 @@ static void close_upvalues(const struct value *last)
 
 static void define_method(struct obj_string *name)
 {
-    struct value method = peek(0);
+    value_t method = peek(0);
     struct obj_class *klass = AS_CLASS(peek(1));
 
     table_set(&klass->methods, name, method);
@@ -262,7 +262,7 @@ static void define_method(struct obj_string *name)
     pop();
 }
 
-static bool is_falsey(struct value v)
+static bool is_falsey(value_t v)
 {
     return IS_NIL(v) || (IS_BOOL(v) && (!AS_BOOL(v)));
 }
@@ -308,7 +308,7 @@ static enum interpret_result run(void)
     for (;;) {
 #ifdef DEBUG_TRACE_EXECUTION
         printf("          ");
-        for (const struct value *slot = vm.stack; slot < vm.stack_top; slot++) {
+        for (const value_t *slot = vm.stack; slot < vm.stack_top; slot++) {
             printf("[ ");
             value_print(*slot);
             printf(" ]");
@@ -321,7 +321,7 @@ static enum interpret_result run(void)
         const u8 instruction = READ_BYTE();
         switch (instruction) {
         case OP_CONSTANT: {
-            const struct value constant = READ_CONSTANT();
+            const value_t constant = READ_CONSTANT();
             push(constant);
             break;
         }
@@ -353,7 +353,7 @@ static enum interpret_result run(void)
         }
         case OP_GET_GLOBAL: {
             const struct obj_string *name = READ_STRING();
-            struct value value;
+            value_t value;
             if (!table_get(&vm.globals, name, &value)) {
                 runtime_error("Undefined variable '%s'.", name->chars);
                 return INTERPRET_RUNTIME_ERROR;
@@ -395,7 +395,7 @@ static enum interpret_result run(void)
             const struct obj_instance *instance = AS_INSTANCE(peek(0));
             struct obj_string *name = READ_STRING();
 
-            struct value value;
+            value_t value;
             if (table_get(&instance->fields, name, &value)) {
                 pop(); // Instance.
                 push(value);
@@ -416,7 +416,7 @@ static enum interpret_result run(void)
 
             struct obj_instance *instance = AS_INSTANCE(peek(1));
             table_set(&instance->fields, READ_STRING(), peek(0));
-            const struct value value = pop();
+            const value_t value = pop();
             pop();
             push(value);
             break;
@@ -431,8 +431,8 @@ static enum interpret_result run(void)
             break;
         }
         case OP_EQUAL: {
-            const struct value b = pop();
-            const struct value a = pop();
+            const value_t b = pop();
+            const value_t a = pop();
             push(BOOL_VAL(values_equal(a, b)));
             break;
         }
@@ -552,7 +552,7 @@ static enum interpret_result run(void)
             break;
         }
         case OP_RETURN: {
-            const struct value result = pop();
+            const value_t result = pop();
             close_upvalues(frame->slots);
             vm.frame_count--;
             if (vm.frame_count == 0) {
@@ -570,7 +570,7 @@ static enum interpret_result run(void)
             break;
         }
         case OP_INHERIT: {
-            struct value superclass = peek(1);
+            value_t superclass = peek(1);
             if (!IS_CLASS(superclass)) {
                 runtime_error("Superclass must be a class.");
                 return INTERPRET_RUNTIME_ERROR;

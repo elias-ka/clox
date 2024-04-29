@@ -68,6 +68,6 @@ size_t chunk_getline(const struct chunk *chunk, size_t instruction);
  * Add a constant to the chunk.
  * @return The index of the added constant in the constants array.
  */
-size_t chunk_add_constant(struct chunk *chunk, struct value v);
+size_t chunk_add_constant(struct chunk *chunk, value_t v);
 
 #endif // CLOX__CHUNK_H_

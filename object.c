@@ -23,7 +23,7 @@ static struct obj *allocate_object(size_t size, enum obj_type type)
     return object;
 }
 
-struct obj_bound_method *new_bound_method(struct value receiver,
+struct obj_bound_method *new_bound_method(value_t receiver,
                                           struct obj_closure *method)
 {
     struct obj_bound_method *bound =
@@ -137,7 +137,7 @@ struct obj_string *copy_string(const char *chars, size_t length)
     return allocate_string(heap_chars, length, hash);
 }
 
-struct obj_upvalue *new_upvalue(struct value *slot)
+struct obj_upvalue *new_upvalue(value_t *slot)
 {
     struct obj_upvalue *upvalue = ALLOCATE_OBJ(struct obj_upvalue, OBJ_UPVALUE);
     upvalue->location = slot;
@@ -155,7 +155,7 @@ static void function_print(const struct obj_function *fn)
     printf("<fn %s>", fn->name->chars);
 }
 
-void object_print(struct value value)
+void object_print(value_t value)
 {
     switch (OBJ_TYPE(value)) {
     case OBJ_BOUND_METHOD:

@@ -197,7 +197,7 @@ static void emit_return(void)
     emit_byte(OP_RETURN);
 }
 
-static u8 make_constant(struct value value)
+static u8 make_constant(value_t value)
 {
     const size_t constant = chunk_add_constant(current_chunk(), value);
     if (constant > UINT8_MAX) {
@@ -208,7 +208,7 @@ static u8 make_constant(struct value value)
     return (u8)constant;
 }
 
-static void emit_constant(struct value value)
+static void emit_constant(value_t value)
 {
     emit_bytes(OP_CONSTANT, make_constant(value));
 }

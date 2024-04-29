@@ -42,7 +42,8 @@
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_C_COMPILER": "/usr/bin/clang"
+        "CMAKE_C_COMPILER": "/usr/bin/clang",
+        "WITH_NAN_BOXING": "ON"
       }
     }
   ]

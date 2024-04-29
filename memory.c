@@ -62,7 +62,7 @@ void mark_object(struct obj *object)
     vm.gray_stack[vm.gray_count++] = object;
 }
 
-void mark_value(struct value value)
+void mark_value(value_t value)
 {
     if (IS_OBJ(value)) {
         mark_object(AS_OBJ(value));
@@ -179,7 +179,7 @@ void free_object(struct obj *object)
 
 static void mark_roots(void)
 {
-    for (struct value *slot = vm.stack; slot < vm.stack_top; slot++) {
+    for (value_t *slot = vm.stack; slot < vm.stack_top; slot++) {
         mark_value(*slot);
     }
 

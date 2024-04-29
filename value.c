@@ -12,13 +12,13 @@ void value_array_init(struct value_array *array)
     array->values = NULL;
 }
 
-void value_array_write(struct value_array *array, struct value v)
+void value_array_write(struct value_array *array, value_t v)
 {
     if (array->capacity < (array->count + 1)) {
         const size_t old_capacity = array->capacity;
         array->capacity = GROW_CAPACITY(old_capacity);
-        array->values = GROW_ARRAY(struct value, array->values, old_capacity,
-                                   array->capacity);
+        array->values =
+            GROW_ARRAY(value_t, array->values, old_capacity, array->capacity);
     }
     array->values[array->count] = v;
     array->count++;
@@ -26,12 +26,23 @@ void value_array_write(struct value_array *array, struct value v)
 
 void value_array_free(struct value_array *array)
 {
-    FREE_ARRAY(struct value, array->values, array->capacity);
+    FREE_ARRAY(value_t, array->values, array->capacity);
     value_array_init(array);
 }
 
-void value_print(struct value v)
+void value_print(value_t v)
 {
+#ifdef NAN_BOXING
+    if (IS_BOOL(v)) {
+        printf(AS_BOOL(v) ? "true" : "false");
+    } else if (IS_NIL(v)) {
+        printf("nil");
+    } else if (IS_NUMBER(v)) {
+        printf("%g", AS_NUMBER(v));
+    } else if (IS_OBJ(v)) {
+        object_print(v);
+    }
+#else
     switch (v.type) {
     case VAL_BOOL:
         printf(AS_BOOL(v) ? "true" : "false");
@@ -46,10 +57,18 @@ void value_print(struct value v)
         object_print(v);
         break;
     }
+#endif
 }
 
-bool values_equal(struct value a, struct value b)
+bool values_equal(value_t a, value_t b)
 {
+#ifdef NAN_BOXING
+    if (IS_NUMBER(a) && IS_NUMBER(b)) {
+        return AS_NUMBER(a) == AS_NUMBER(b);
+    }
+    return a == b;
+#else
+
     if (a.type != b.type) {
         return false;
     }
@@ -66,4 +85,5 @@ bool values_equal(struct value a, struct value b)
     default:
         return false;
     }
+#endif
 }
