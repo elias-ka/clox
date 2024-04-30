@@ -11,9 +11,8 @@ void disassemble_chunk(const struct chunk *chunk, const char *name)
     printf("== %s ==\n", name);
 
     for (size_t offset = 0; offset < chunk->size;
-         offset = disassemble_instruction(chunk, offset)) {
-        // empty loop body
-    }
+         offset = disassemble_instruction(chunk, offset))
+        ;
 }
 
 static size_t constant_instruction(const char *name, const struct chunk *chunk,
