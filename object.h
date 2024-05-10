@@ -97,16 +97,16 @@ struct obj_bound_method {
     struct obj_closure *method;
 };
 
-struct obj_bound_method *new_bound_method(value_ty receiver,
-                                          struct obj_closure *method);
-struct obj_class *new_class(struct obj_string *name);
-struct obj_closure *new_closure(struct obj_function *fn);
-struct obj_function *new_function();
-struct obj_instance *new_instance(struct obj_class *klass);
-struct obj_native *new_native(native_fn fn);
+struct obj_bound_method *alloc_bound_method(value_ty receiver,
+                                            struct obj_closure *method);
+struct obj_class *alloc_class(struct obj_string *name);
+struct obj_closure *alloc_closure(struct obj_function *fn);
+struct obj_function *alloc_function();
+struct obj_instance *alloc_instance(struct obj_class *klass);
+struct obj_native *alloc_native(native_fn fn);
 const struct obj_string *take_string(char *chars, size_t length);
 const struct obj_string *copy_string(const char *chars, size_t length);
-struct obj_upvalue *new_upvalue(value_ty *slot);
+struct obj_upvalue *alloc_upvalue(value_ty *slot);
 void object_print(value_ty value);
 
 static inline bool __attribute__((unused))

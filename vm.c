@@ -60,7 +60,7 @@ value_ty pop(void);
 static void define_native(const char *name, native_fn fn)
 {
     push(OBJ_VAL(copy_string(name, strlen(name))));
-    push(OBJ_VAL(new_native(fn)));
+    push(OBJ_VAL(alloc_native(fn)));
     table_set(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
     pop();
     pop();
@@ -140,7 +140,7 @@ static bool call_value(value_ty callee, i32 n_args)
         }
         case OBJ_CLASS: {
             struct obj_class *klass = AS_CLASS(callee);
-            vm.stack_top[-n_args - 1] = OBJ_VAL(new_instance(klass));
+            vm.stack_top[-n_args - 1] = OBJ_VAL(alloc_instance(klass));
             if (!IS_NIL(klass->initializer)) {
                 return call(AS_CLOSURE(klass->initializer), n_args);
             }
@@ -209,7 +209,7 @@ static bool bind_method(const struct obj_class *klass,
     }
 
     struct obj_bound_method *bound =
-        new_bound_method(peek(0), AS_CLOSURE(method));
+        alloc_bound_method(peek(0), AS_CLOSURE(method));
     pop();
     push(OBJ_VAL(bound));
     return true;
@@ -229,7 +229,7 @@ static struct obj_upvalue *capture_upvalue(value_ty *local)
         return upvalue;
     }
 
-    struct obj_upvalue *created_upvalue = new_upvalue(local);
+    struct obj_upvalue *created_upvalue = alloc_upvalue(local);
     created_upvalue->next = upvalue;
 
     if (prev_upvalue == NULL) {
@@ -534,7 +534,7 @@ static enum interpret_result run(void)
         }
         case OP_CLOSURE: {
             struct obj_function *fn = AS_FUNCTION(READ_CONSTANT());
-            const struct obj_closure *closure = new_closure(fn);
+            const struct obj_closure *closure = alloc_closure(fn);
             push(OBJ_VAL(closure));
             for (i32 i = 0; i < closure->upvalue_count; i++) {
                 const u8 is_local = READ_BYTE();
@@ -568,7 +568,7 @@ static enum interpret_result run(void)
             break;
         }
         case OP_CLASS: {
-            push(OBJ_VAL(new_class(READ_STRING())));
+            push(OBJ_VAL(alloc_class(READ_STRING())));
             break;
         }
         case OP_INHERIT: {
@@ -607,7 +607,7 @@ enum interpret_result vm_interpret(const char *source)
 
     push(OBJ_VAL(fn));
 
-    struct obj_closure *closure = new_closure(fn);
+    struct obj_closure *closure = alloc_closure(fn);
     pop();
     push(OBJ_VAL(closure));
     call(closure, 0);

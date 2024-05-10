@@ -121,7 +121,7 @@ static void advance(void)
     parser.previous = parser.current;
 
     for (;;) {
-        parser.current = scan_token();
+        parser.current = scanner_scan_token();
         if (parser.current.type != TOKEN_ERROR)
             break;
 
@@ -231,7 +231,7 @@ static void compiler_init(struct compiler *compiler, enum function_type type)
     compiler->fn_type = type;
     compiler->local_count = 0;
     compiler->scope_depth = 0;
-    compiler->fn = new_function();
+    compiler->fn = alloc_function();
     current = compiler;
     if (type != TYPE_SCRIPT) {
         current->fn->name =
@@ -1076,7 +1076,7 @@ void mark_compiler_roots(void)
     const struct compiler *compiler = current;
 
     while (compiler != NULL) {
-        mark_object((struct obj *)compiler->fn);
+        object_mark((struct obj *)compiler->fn);
         compiler = compiler->enclosing;
     }
 }

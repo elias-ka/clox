@@ -59,6 +59,6 @@ struct token {
 };
 
 void scanner_init(const char *source);
-struct token scan_token(void);
+struct token scanner_scan_token(void);
 
 #endif // CLOX__SCANNER_H_

@@ -8,9 +8,9 @@
 #include <string.h>
 
 #define ALLOCATE_OBJ(type, obj_type) \
-    (type *)allocate_object(sizeof(type), obj_type)
+    (type *)alloc_object(sizeof(type), obj_type)
 
-static struct obj *allocate_object(size_t size, enum obj_type type)
+static struct obj *alloc_object(size_t size, enum obj_type type)
 {
     struct obj *object = reallocate(NULL, 0, size);
     object->type = type;
@@ -23,8 +23,8 @@ static struct obj *allocate_object(size_t size, enum obj_type type)
     return object;
 }
 
-struct obj_bound_method *new_bound_method(value_ty receiver,
-                                          struct obj_closure *method)
+struct obj_bound_method *alloc_bound_method(value_ty receiver,
+                                            struct obj_closure *method)
 {
     struct obj_bound_method *bound =
         ALLOCATE_OBJ(struct obj_bound_method, OBJ_BOUND_METHOD);
@@ -33,7 +33,7 @@ struct obj_bound_method *new_bound_method(value_ty receiver,
     return bound;
 }
 
-struct obj_class *new_class(struct obj_string *name)
+struct obj_class *alloc_class(struct obj_string *name)
 {
     struct obj_class *klass = ALLOCATE_OBJ(struct obj_class, OBJ_CLASS);
     klass->name = name;
@@ -42,7 +42,7 @@ struct obj_class *new_class(struct obj_string *name)
     return klass;
 }
 
-struct obj_closure *new_closure(struct obj_function *fn)
+struct obj_closure *alloc_closure(struct obj_function *fn)
 {
     struct obj_upvalue **upvalues =
         ALLOCATE(struct obj_upvalue *, (u64)fn->upvalue_count);
@@ -59,7 +59,7 @@ struct obj_closure *new_closure(struct obj_function *fn)
     return closure;
 }
 
-struct obj_function *new_function()
+struct obj_function *alloc_function()
 {
     struct obj_function *fn = ALLOCATE_OBJ(struct obj_function, OBJ_FUNCTION);
     fn->arity = 0;
@@ -69,7 +69,7 @@ struct obj_function *new_function()
     return fn;
 }
 
-struct obj_instance *new_instance(struct obj_class *klass)
+struct obj_instance *alloc_instance(struct obj_class *klass)
 {
     struct obj_instance *instance =
         ALLOCATE_OBJ(struct obj_instance, OBJ_INSTANCE);
@@ -78,14 +78,14 @@ struct obj_instance *new_instance(struct obj_class *klass)
     return instance;
 }
 
-struct obj_native *new_native(native_fn fn)
+struct obj_native *alloc_native(native_fn fn)
 {
     struct obj_native *native = ALLOCATE_OBJ(struct obj_native, OBJ_NATIVE);
     native->fn = fn;
     return native;
 }
 
-static struct obj_string *allocate_string(char *chars, size_t length, u32 hash)
+static struct obj_string *alloc_string(char *chars, size_t length, u32 hash)
 {
     struct obj_string *string = ALLOCATE_OBJ(struct obj_string, OBJ_STRING);
     string->chars = chars;
@@ -119,7 +119,7 @@ const struct obj_string *take_string(char *chars, size_t length)
         FREE_ARRAY(char, chars, length + 1);
         return interned;
     }
-    return allocate_string(chars, length, hash);
+    return alloc_string(chars, length, hash);
 }
 
 const struct obj_string *copy_string(const char *chars, size_t length)
@@ -134,10 +134,10 @@ const struct obj_string *copy_string(const char *chars, size_t length)
     char *heap_chars = ALLOCATE(char, length + 1);
     memcpy(heap_chars, chars, length);
     heap_chars[length] = '\0';
-    return allocate_string(heap_chars, length, hash);
+    return alloc_string(heap_chars, length, hash);
 }
 
-struct obj_upvalue *new_upvalue(value_ty *slot)
+struct obj_upvalue *alloc_upvalue(value_ty *slot)
 {
     struct obj_upvalue *upvalue = ALLOCATE_OBJ(struct obj_upvalue, OBJ_UPVALUE);
     upvalue->location = slot;

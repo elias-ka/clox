@@ -37,7 +37,7 @@ void *reallocate(void *ptr, size_t old_size, size_t new_size)
     return new_ptr;
 }
 
-void mark_object(struct obj *object)
+void object_mark(struct obj *object)
 {
     if (object == NULL || object->is_marked)
         return;
@@ -62,17 +62,17 @@ void mark_object(struct obj *object)
     vm.gray_stack[vm.gray_count++] = object;
 }
 
-void mark_value(value_ty value)
+void value_mark(value_ty value)
 {
     if (IS_OBJ(value)) {
-        mark_object(AS_OBJ(value));
+        object_mark(AS_OBJ(value));
     }
 }
 
-void mark_array(const struct value_array *array)
+void array_mark(const struct value_array *array)
 {
     for (size_t i = 0; i < array->count; i++) {
-        mark_value(array->values[i]);
+        value_mark(array->values[i]);
     }
 }
 
@@ -88,38 +88,38 @@ static void blacken_object(struct obj *object)
     case OBJ_BOUND_METHOD: {
         const struct obj_bound_method *bound =
             (struct obj_bound_method *)object;
-        mark_value(bound->receiver);
-        mark_object((struct obj *)bound->method);
+        value_mark(bound->receiver);
+        object_mark((struct obj *)bound->method);
         break;
     }
     case OBJ_CLASS: {
         const struct obj_class *klass = (struct obj_class *)object;
-        mark_object((struct obj *)klass->name);
-        mark_table(&klass->methods);
+        object_mark((struct obj *)klass->name);
+        table_mark(&klass->methods);
         break;
     }
     case OBJ_CLOSURE: {
         const struct obj_closure *closure = (struct obj_closure *)object;
-        mark_object((struct obj *)closure->fn);
+        object_mark((struct obj *)closure->fn);
         for (i32 i = 0; i < closure->upvalue_count; i++) {
-            mark_object((struct obj *)closure->upvalues[i]);
+            object_mark((struct obj *)closure->upvalues[i]);
         }
         break;
     }
     case OBJ_FUNCTION: {
         const struct obj_function *function = (struct obj_function *)object;
-        mark_object((struct obj *)function->name);
-        mark_array(&function->chunk.constants);
+        object_mark((struct obj *)function->name);
+        array_mark(&function->chunk.constants);
         break;
     }
     case OBJ_INSTANCE: {
         const struct obj_instance *instance = (struct obj_instance *)object;
-        mark_object((struct obj *)instance->klass);
-        mark_table(&instance->fields);
+        object_mark((struct obj *)instance->klass);
+        table_mark(&instance->fields);
         break;
     }
     case OBJ_UPVALUE:
-        mark_value(((struct obj_upvalue *)object)->closed);
+        value_mark(((struct obj_upvalue *)object)->closed);
         break;
     case OBJ_NATIVE:
     case OBJ_STRING:
@@ -180,21 +180,21 @@ void free_object(struct obj *object)
 static void mark_roots(void)
 {
     for (const value_ty *slot = vm.stack; slot < vm.stack_top; slot++) {
-        mark_value(*slot);
+        value_mark(*slot);
     }
 
     for (size_t i = 0; i < vm.frame_count; i++) {
-        mark_object((struct obj *)vm.frames[i].closure);
+        object_mark((struct obj *)vm.frames[i].closure);
     }
 
     for (struct obj_upvalue *upvalue = vm.open_upvalues; upvalue != NULL;
          upvalue = upvalue->next) {
-        mark_object((struct obj *)upvalue);
+        object_mark((struct obj *)upvalue);
     }
 
-    mark_table(&vm.globals);
+    table_mark(&vm.globals);
     mark_compiler_roots();
-    mark_object((struct obj *)vm.init_string);
+    object_mark((struct obj *)vm.init_string);
 }
 
 static void trace_references(void)

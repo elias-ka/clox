@@ -225,7 +225,7 @@ static struct token string(void)
     return make_token(TOKEN_STRING);
 }
 
-struct token scan_token(void)
+struct token scanner_scan_token(void)
 {
     skip_whitespace();
     scanner.start = scanner.current;

@@ -131,7 +131,8 @@ void table_add_all(const struct table *source, struct table *dest)
 }
 
 const struct obj_string *table_find_string(const struct table *table,
-                                     const char *chars, size_t length, u32 hash)
+                                           const char *chars, size_t length,
+                                           u32 hash)
 {
     if (table->len == 0)
         return NULL;
@@ -167,11 +168,11 @@ void table_remove_unreachable(const struct table *table)
     }
 }
 
-void mark_table(const struct table *table)
+void table_mark(const struct table *table)
 {
     for (size_t i = 0; i < table->capacity; i++) {
         const struct entry *entry = &table->entries[i];
-        mark_object((struct obj *)entry->key);
-        mark_value(entry->value);
+        object_mark((struct obj *)entry->key);
+        value_mark(entry->value);
     }
 }
