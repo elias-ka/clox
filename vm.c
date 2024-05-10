@@ -143,7 +143,8 @@ static bool call_value(value_ty callee, i32 n_args)
             vm.stack_top[-n_args - 1] = OBJ_VAL(new_instance(klass));
             if (!IS_NIL(klass->initializer)) {
                 return call(AS_CLOSURE(klass->initializer), n_args);
-            } else if (n_args != 0) {
+            }
+            if (n_args != 0) {
                 runtime_error("Expected 0 arguments but got %d.", n_args);
                 return false;
             }
@@ -152,8 +153,8 @@ static bool call_value(value_ty callee, i32 n_args)
         case OBJ_CLOSURE:
             return call(AS_CLOSURE(callee), n_args);
         case OBJ_NATIVE: {
-            native_fn fn = AS_NATIVE(callee);
-            value_ty result = fn(n_args, vm.stack_top - n_args);
+            const native_fn fn = AS_NATIVE(callee);
+            const value_ty result = fn(n_args, vm.stack_top - n_args);
             vm.stack_top -= n_args + 1;
             push(result);
             return true;
@@ -167,8 +168,8 @@ static bool call_value(value_ty callee, i32 n_args)
     return false;
 }
 
-static bool invoke_from_class(struct obj_class *klass, struct obj_string *name,
-                              i32 n_args)
+static bool invoke_from_class(const struct obj_class *klass,
+                              const struct obj_string *name, i32 n_args)
 {
     value_ty method;
     if (!table_get(&klass->methods, name, &method)) {
@@ -179,15 +180,15 @@ static bool invoke_from_class(struct obj_class *klass, struct obj_string *name,
     return call(AS_CLOSURE(method), n_args);
 }
 
-static bool invoke(struct obj_string *name, i32 n_args)
+static bool invoke(const struct obj_string *name, i32 n_args)
 {
-    value_ty receiver = peek(n_args);
+    const value_ty receiver = peek(n_args);
     if (!IS_INSTANCE(receiver)) {
         runtime_error("Only instances have methods.");
         return false;
     }
 
-    struct obj_instance *instance = AS_INSTANCE(receiver);
+    const struct obj_instance *instance = AS_INSTANCE(receiver);
 
     value_ty value;
     if (table_get(&instance->fields, name, &value)) {
@@ -198,7 +199,8 @@ static bool invoke(struct obj_string *name, i32 n_args)
     return invoke_from_class(instance->klass, name, n_args);
 }
 
-static bool bind_method(struct obj_class *klass, struct obj_string *name)
+static bool bind_method(const struct obj_class *klass,
+                        const struct obj_string *name)
 {
     value_ty method;
     if (!table_get(&klass->methods, name, &method)) {
@@ -251,7 +253,7 @@ static void close_upvalues(const value_ty *last)
 
 static void define_method(struct obj_string *name)
 {
-    value_ty method = peek(0);
+    const value_ty method = peek(0);
     struct obj_class *klass = AS_CLASS(peek(1));
 
     table_set(&klass->methods, name, method);
@@ -278,7 +280,7 @@ static void concatenate(void)
     memcpy(chars + a->length, b->chars, b->length);
     chars[length] = '\0';
 
-    struct obj_string *result = take_string(chars, length);
+    const struct obj_string *result = take_string(chars, length);
     pop();
     pop();
     push(OBJ_VAL(result));
@@ -393,7 +395,7 @@ static enum interpret_result run(void)
             }
 
             const struct obj_instance *instance = AS_INSTANCE(peek(0));
-            struct obj_string *name = READ_STRING();
+            const struct obj_string *name = READ_STRING();
 
             value_ty value;
             if (table_get(&instance->fields, name, &value)) {
@@ -422,8 +424,8 @@ static enum interpret_result run(void)
             break;
         }
         case OP_GET_SUPER: {
-            struct obj_string *name = READ_STRING();
-            struct obj_class *superclass = AS_CLASS(pop());
+            const struct obj_string *name = READ_STRING();
+            const struct obj_class *superclass = AS_CLASS(pop());
 
             if (!bind_method(superclass, name)) {
                 return INTERPRET_RUNTIME_ERROR;
@@ -512,7 +514,7 @@ static enum interpret_result run(void)
             break;
         }
         case OP_INVOKE: {
-            struct obj_string *method = READ_STRING();
+            const struct obj_string *method = READ_STRING();
             const u8 n_args = READ_BYTE();
             if (!invoke(method, n_args)) {
                 return INTERPRET_RUNTIME_ERROR;
@@ -521,9 +523,9 @@ static enum interpret_result run(void)
             break;
         }
         case OP_SUPER_INVOKE: {
-            struct obj_string *method = READ_STRING();
+            const struct obj_string *method = READ_STRING();
             const u8 n_args = READ_BYTE();
-            struct obj_class *superclass = AS_CLASS(pop());
+            const struct obj_class *superclass = AS_CLASS(pop());
             if (!invoke_from_class(superclass, method, n_args)) {
                 return INTERPRET_RUNTIME_ERROR;
             }
@@ -570,7 +572,7 @@ static enum interpret_result run(void)
             break;
         }
         case OP_INHERIT: {
-            value_ty superclass = peek(1);
+            const value_ty superclass = peek(1);
             if (!IS_CLASS(superclass)) {
                 runtime_error("Superclass must be a class.");
                 return INTERPRET_RUNTIME_ERROR;

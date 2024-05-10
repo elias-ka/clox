@@ -23,7 +23,7 @@ struct vm {
     value_ty *stack_top;
     struct table globals;
     struct table strings;
-    struct obj_string *init_string;
+    const struct obj_string *init_string;
     struct obj_upvalue *open_upvalues;
 
     size_t bytes_allocated;

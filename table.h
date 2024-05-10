@@ -22,11 +22,11 @@ bool table_get(const struct table *table, const struct obj_string *key,
                value_ty *value);
 bool table_delete(const struct table *table, const struct obj_string *key);
 void table_add_all(const struct table *source, struct table *dest);
-struct obj_string *table_find_string(const struct table *table,
+const struct obj_string *table_find_string(const struct table *table,
                                      const char *chars, size_t length,
                                      u32 hash);
 
-void table_remove_unreachable(struct table *table);
-void mark_table(struct table *table);
+void table_remove_unreachable(const struct table *table);
+void mark_table(const struct table *table);
 
 #endif // CLOX__TABLE_H_

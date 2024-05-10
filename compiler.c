@@ -6,7 +6,6 @@
 #include "object.h"
 #include "scanner.h"
 #include "value.h"
-#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -360,7 +359,7 @@ static void dot(bool can_assign)
         expression();
         emit_bytes(OP_SET_PROPERTY, name);
     } else if (match(TOKEN_LEFT_PAREN)) {
-        u8 n_args = argument_list();
+        const u8 n_args = argument_list();
         emit_bytes(OP_INVOKE, name);
         emit_byte(n_args);
     } else {
@@ -617,7 +616,7 @@ static i32 add_upvalue(struct compiler *compiler, u8 index, bool is_local)
     const i32 upvalue_count = compiler->fn->upvalue_count;
 
     for (i32 i = 0; i < upvalue_count; i++) {
-        struct upvalue *upvalue = &compiler->upvalues[i];
+        const struct upvalue *upvalue = &compiler->upvalues[i];
         if (upvalue->index == index && upvalue->is_local == is_local) {
             return i;
         }
@@ -639,7 +638,7 @@ static i32 resolve_upvalue(struct compiler *compiler, struct token *name)
         return -1;
 
     // Look for a matching local variable in the enclosing function.
-    i32 local = resolve_local(compiler->enclosing, name);
+    const i32 local = resolve_local(compiler->enclosing, name);
     if (local != -1) {
         compiler->enclosing->locals[local].is_captured = true;
         return add_upvalue(compiler, (u8)local, true);
@@ -647,7 +646,7 @@ static i32 resolve_upvalue(struct compiler *compiler, struct token *name)
 
     // The local variable wasn't found in the immediate enclosing function.
     // It must be an upvalue, recursively search through the enclosing functions.
-    i32 upvalue = resolve_upvalue(compiler->enclosing, name);
+    const i32 upvalue = resolve_upvalue(compiler->enclosing, name);
     if (upvalue != -1) {
         return add_upvalue(current, (u8)upvalue, false);
     }
@@ -1074,7 +1073,7 @@ struct obj_function *compile(const char *source)
 
 void mark_compiler_roots(void)
 {
-    struct compiler *compiler = current;
+    const struct compiler *compiler = current;
 
     while (compiler != NULL) {
         mark_object((struct obj *)compiler->fn);

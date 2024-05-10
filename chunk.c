@@ -31,7 +31,7 @@ void chunk_write(struct chunk *chunk, u8 byte, size_t line)
         return;
 
     if (chunk->line_capacity < chunk->line_count + 1) {
-        size_t old_capacity = chunk->line_capacity;
+        const size_t old_capacity = chunk->line_capacity;
         chunk->line_capacity = GROW_CAPACITY(old_capacity);
         chunk->lines = GROW_ARRAY(struct line_start, chunk->lines, old_capacity,
                                   chunk->line_capacity);
@@ -56,8 +56,8 @@ size_t chunk_getline(const struct chunk *chunk, size_t instruction)
     size_t end = chunk->line_count - 1;
 
     for (;;) {
-        size_t mid = (start + end) / 2;
-        struct line_start *line = &chunk->lines[mid];
+        const size_t mid = (start + end) / 2;
+        const struct line_start *line = &chunk->lines[mid];
 
         if (instruction < line->offset) {
             end = mid - 1;

@@ -47,7 +47,7 @@ struct obj_function {
     i32 arity;
     i32 upvalue_count;
     struct chunk chunk;
-    struct obj_string *name;
+    const struct obj_string *name;
 };
 
 typedef value_ty (*native_fn)(i32 arg_count, value_ty *args);
@@ -104,8 +104,8 @@ struct obj_closure *new_closure(struct obj_function *fn);
 struct obj_function *new_function();
 struct obj_instance *new_instance(struct obj_class *klass);
 struct obj_native *new_native(native_fn fn);
-struct obj_string *take_string(char *chars, size_t length);
-struct obj_string *copy_string(const char *chars, size_t length);
+const struct obj_string *take_string(char *chars, size_t length);
+const struct obj_string *copy_string(const char *chars, size_t length);
 struct obj_upvalue *new_upvalue(value_ty *slot);
 void object_print(value_ty value);
 

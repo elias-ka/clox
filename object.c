@@ -109,10 +109,10 @@ static u32 hash_string(const char *key, size_t length)
     return hash;
 }
 
-struct obj_string *take_string(char *chars, size_t length)
+const struct obj_string *take_string(char *chars, size_t length)
 {
     const u32 hash = hash_string(chars, length);
-    struct obj_string *interned =
+    const struct obj_string *interned =
         table_find_string(&vm.strings, chars, length, hash);
 
     if (interned) {
@@ -122,10 +122,10 @@ struct obj_string *take_string(char *chars, size_t length)
     return allocate_string(chars, length, hash);
 }
 
-struct obj_string *copy_string(const char *chars, size_t length)
+const struct obj_string *copy_string(const char *chars, size_t length)
 {
     const u32 hash = hash_string(chars, length);
-    struct obj_string *interned =
+    const struct obj_string *interned =
         table_find_string(&vm.strings, chars, length, hash);
 
     if (interned)
