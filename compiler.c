@@ -461,7 +461,7 @@ static void super_(bool can_assign)
 {
     (void)can_assign;
 
-    if (current_class == NULL) {
+    if (!current_class) {
         error("Cannot use 'super' outside of a class.");
     } else if (!current_class->has_superclass) {
         error("Cannot use 'super' in a class with no superclass.");
@@ -487,7 +487,7 @@ static void super_(bool can_assign)
 static void this_(bool can_assign)
 {
     (void)can_assign;
-    if (current_class == NULL) {
+    if (!current_class) {
         error("Cannot use 'this' outside of a class.");
         return;
     }
@@ -563,7 +563,7 @@ static void parse_precedence(enum precedence prec)
 {
     advance();
     const parse_fn prefix_rule = get_rule(parser.previous.type)->prefix;
-    if (prefix_rule == NULL) {
+    if (!prefix_rule) {
         error("Expect expression.");
         return;
     }
@@ -634,7 +634,7 @@ static i32 add_upvalue(struct compiler *compiler, u8 index, bool is_local)
 
 static i32 resolve_upvalue(struct compiler *compiler, struct token *name)
 {
-    if (compiler->enclosing == NULL)
+    if (!compiler->enclosing)
         return -1;
 
     // Look for a matching local variable in the enclosing function.
@@ -1075,7 +1075,7 @@ void mark_compiler_roots(void)
 {
     const struct compiler *compiler = current;
 
-    while (compiler != NULL) {
+    while (compiler) {
         object_mark((struct obj *)compiler->fn);
         compiler = compiler->enclosing;
     }

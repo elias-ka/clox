@@ -148,7 +148,7 @@ struct obj_upvalue *alloc_upvalue(value_ty *slot)
 
 static void function_print(const struct obj_function *fn)
 {
-    if (fn->name == NULL) {
+    if (!fn->name) {
         printf("<script>");
         return;
     }

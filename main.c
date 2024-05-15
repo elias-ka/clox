@@ -7,7 +7,7 @@ static void repl(void)
     for (;;) {
         char line[1024];
         printf("> ");
-        if (fgets(line, sizeof(line), stdin) == NULL) {
+        if (!fgets(line, sizeof(line), stdin)) {
             printf("\n");
             break;
         }
@@ -19,7 +19,7 @@ static void repl(void)
 static char *read_file(const char *path)
 {
     FILE *file = fopen(path, "rb");
-    if (file == NULL) {
+    if (!file) {
         fprintf(stderr, "Could not open file \"%s\".\n", path);
         exit(74);
     }
@@ -35,7 +35,7 @@ static char *read_file(const char *path)
     }
 
     char *buffer = malloc((size_t)file_size + 1);
-    if (buffer == NULL) {
+    if (!buffer) {
         fprintf(stderr, "Not enough memory to read \"%s\".\n", path);
         fclose(file);
         exit(74);

@@ -220,19 +220,19 @@ static struct obj_upvalue *capture_upvalue(value_ty *local)
     struct obj_upvalue *prev_upvalue = NULL;
     struct obj_upvalue *upvalue = vm.open_upvalues;
 
-    while (upvalue != NULL && upvalue->location > local) {
+    while (upvalue && upvalue->location > local) {
         prev_upvalue = upvalue;
         upvalue = upvalue->next;
     }
 
-    if (upvalue != NULL && upvalue->location == local) {
+    if (upvalue && upvalue->location == local) {
         return upvalue;
     }
 
     struct obj_upvalue *created_upvalue = alloc_upvalue(local);
     created_upvalue->next = upvalue;
 
-    if (prev_upvalue == NULL) {
+    if (!prev_upvalue) {
         vm.open_upvalues = created_upvalue;
     } else {
         prev_upvalue->next = created_upvalue;
@@ -243,7 +243,7 @@ static struct obj_upvalue *capture_upvalue(value_ty *local)
 
 static void close_upvalues(const value_ty *last)
 {
-    while (vm.open_upvalues != NULL && vm.open_upvalues->location >= last) {
+    while (vm.open_upvalues && vm.open_upvalues->location >= last) {
         struct obj_upvalue *upvalue = vm.open_upvalues;
         upvalue->closed = *upvalue->location;
         upvalue->location = &upvalue->closed;
@@ -602,7 +602,7 @@ static enum interpret_result run(void)
 enum interpret_result vm_interpret(const char *source)
 {
     struct obj_function *fn = compile(source);
-    if (fn == NULL)
+    if (!fn)
         return INTERPRET_COMPILE_ERROR;
 
     push(OBJ_VAL(fn));

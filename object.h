@@ -109,8 +109,7 @@ const struct obj_string *copy_string(const char *chars, size_t length);
 struct obj_upvalue *alloc_upvalue(value_ty *slot);
 void object_print(value_ty value);
 
-static inline bool __attribute__((unused))
-is_obj_type(value_ty v, enum obj_type type)
+static inline bool is_obj_type(value_ty v, enum obj_type type)
 {
     return IS_OBJ(v) && (AS_OBJ(v)->type == type);
 }

@@ -28,12 +28,12 @@ static struct entry *find_entry(struct entry *entries, size_t capacity,
 
     for (;;) {
         struct entry *entry = &entries[index];
-        if (entry->key == NULL) {
+        if (!entry->key) {
             if (IS_NIL(entry->value)) {
                 // bucket is empty
                 return tombstone ? tombstone : entry;
             }
-            if (tombstone == NULL) {
+            if (!tombstone) {
                 // bucket had a tombstone
                 tombstone = entry;
             }
@@ -58,7 +58,7 @@ static void adjust_capacity(struct table *table, size_t capacity)
     table->len = 0;
     for (size_t i = 0; i < table->capacity; i++) {
         const struct entry *entry = &table->entries[i];
-        if (entry->key == NULL)
+        if (!entry->key)
             continue;
 
         struct entry *dest = find_entry(entries, capacity, entry->key);
@@ -80,7 +80,7 @@ bool table_set(struct table *table, struct obj_string *key, value_ty value)
     }
 
     struct entry *entry = find_entry(table->entries, table->capacity, key);
-    const bool is_new_key = entry->key == NULL;
+    const bool is_new_key = !entry->key;
 
     if (is_new_key && IS_NIL(entry->value))
         table->len++;
@@ -98,7 +98,7 @@ bool table_get(const struct table *table, const struct obj_string *key,
 
     const struct entry *entry =
         find_entry(table->entries, table->capacity, key);
-    if (entry->key == NULL)
+    if (!entry->key)
         return false;
 
     *value = entry->value;
@@ -112,7 +112,7 @@ bool table_delete(const struct table *table, const struct obj_string *key)
 
     // find the entry
     struct entry *entry = find_entry(table->entries, table->capacity, key);
-    if (entry->key == NULL)
+    if (!entry->key)
         return false;
 
     // place a tombstone in the entry
@@ -125,7 +125,7 @@ void table_add_all(const struct table *source, struct table *dest)
 {
     for (size_t i = 0; i < source->capacity; i++) {
         const struct entry *entry = &source->entries[i];
-        if (entry->key != NULL)
+        if (entry->key)
             table_set(dest, entry->key, entry->value);
     }
 }
@@ -141,7 +141,7 @@ const struct obj_string *table_find_string(const struct table *table,
     for (;;) {
         const struct entry *entry = &table->entries[index];
 
-        if (entry->key == NULL) {
+        if (!entry->key) {
             // stop if we find an empty non-tombstone entry
             if (IS_NIL(entry->value))
                 return NULL;
@@ -162,7 +162,7 @@ void table_remove_unreachable(const struct table *table)
 {
     for (size_t i = 0; i < table->capacity; i++) {
         const struct entry *entry = &table->entries[i];
-        if (entry->key != NULL && !entry->key->obj.is_marked) {
+        if (entry->key && !entry->key->obj.is_marked) {
             table_delete(table, entry->key);
         }
     }

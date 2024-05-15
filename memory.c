@@ -30,7 +30,7 @@ void *reallocate(void *ptr, size_t old_size, size_t new_size)
     }
 
     void *new_ptr = realloc(ptr, new_size);
-    if (new_ptr == NULL) {
+    if (!new_ptr) {
         exit(1);
     }
 
@@ -39,7 +39,7 @@ void *reallocate(void *ptr, size_t old_size, size_t new_size)
 
 void object_mark(struct obj *object)
 {
-    if (object == NULL || object->is_marked)
+    if (!object || object->is_marked)
         return;
 
 #ifdef DEBUG_LOG_GC
@@ -55,7 +55,7 @@ void object_mark(struct obj *object)
         vm.gray_stack =
             realloc(vm.gray_stack, sizeof(struct obj *) * vm.gray_capacity);
 
-        if (vm.gray_stack == NULL)
+        if (!vm.gray_stack)
             exit(1);
     }
 
@@ -187,7 +187,7 @@ static void mark_roots(void)
         object_mark((struct obj *)vm.frames[i].closure);
     }
 
-    for (struct obj_upvalue *upvalue = vm.open_upvalues; upvalue != NULL;
+    for (struct obj_upvalue *upvalue = vm.open_upvalues; upvalue;
          upvalue = upvalue->next) {
         object_mark((struct obj *)upvalue);
     }
@@ -210,7 +210,7 @@ static void sweep(void)
     struct obj *previous = NULL;
     struct obj *object = vm.objects;
 
-    while (object != NULL) {
+    while (object) {
         if (object->is_marked) {
             // Marked objects aren't freed but they're unmarked
             // for the next GC cycle.
@@ -222,7 +222,7 @@ static void sweep(void)
             struct obj *unreached = object;
             object = object->next;
 
-            if (previous != NULL) {
+            if (previous) {
                 previous->next = object;
             } else {
                 vm.objects = object;
